@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Question - Question Bank Repository</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <div class="app-wrapper">
+        <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="sidebar-brand">
+          <i class="bi bi-mortarboard-fill"></i>
+          <span>MMCOE Exam</span>
+        </a>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section-title">Faculty Portal</div>
+        <div class="nav-item">
+          <a href="/faculty/dashboard.html" class="nav-link ">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="/questions/list.html" class="nav-link active">
+            <i class="bi bi-question-square-fill"></i>
+            <span>Question Bank</span>
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="/exams/list.html" class="nav-link ">
+            <i class="bi bi-card-checklist"></i>
+            <span>Exam Management</span>
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="/evaluation/pending.html" class="nav-link ">
+            <i class="bi bi-pencil-square"></i>
+            <span>Evaluations</span>
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="/subjects/list.html" class="nav-link ">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="/reports/exam_report.html" class="nav-link ">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Analytics</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="top-navbar">
+        <div class="navbar-search">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search questions...">
+        </div>
+        <div class="navbar-actions">
+          <!-- Notification Bell Dropdown -->
+          <div class="dropdown me-2">
+            <button class="icon-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+              <i class="bi bi-bell-fill"></i>
+              <span class="badge-dot"></span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end shadow border bg-white p-0 mt-2" style="width: 340px;" aria-labelledby="notifDropdown">
+              <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                <h6 class="m-0 fw-bold text-dark">Notifications</h6>
+                <span class="badge bg-primary rounded-pill">3 New</span>
+              </div>
+              <div class="list-group list-group-flush small" style="max-height: 280px; overflow-y: auto;">
+                <a href="/notifications/center.html" class="list-group-item list-group-item-action p-3">
+                  <div class="d-flex w-100 justify-content-between mb-1">
+                    <strong class="text-info"><i class="bi bi-award me-1"></i> Result Published</strong>
+                    <small class="text-muted">10m ago</small>
+                  </div>
+                  <p class="mb-1 text-muted">Your result for DBMS Mid-Term Assessment is now available.</p>
+                </a>
+                <a href="/notifications/center.html" class="list-group-item list-group-item-action p-3">
+                  <div class="d-flex w-100 justify-content-between mb-1">
+                    <strong class="text-warning"><i class="bi bi-clock me-1"></i> Exam Reminder</strong>
+                    <small class="text-muted">1h ago</small>
+                  </div>
+                  <p class="mb-1 text-muted">Full Stack Web Development exam starts in 2 hours.</p>
+                </a>
+              </div>
+              <div class="p-2 text-center border-top">
+                <a href="/notifications/center.html" class="text-decoration-none small text-info fw-semibold">View All Notifications</a>
+              </div>
+            </div>
+          </div>
+          <!-- User Profile Dropdown -->
+          <div class="dropdown">
+            <div class="user-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="avatar" style="background: var(--mmcoe-navy);">F</div>
+              <div class="user-info">
+                <span class="user-name">Dr. Rajesh Sharma</span>
+                <span class="user-role">Faculty (ID: 2)</span>
+              </div>
+              <i class="bi bi-chevron-down ms-1 text-muted" style="font-size: 0.75rem;"></i>
+            </div>
+            <ul class="dropdown-menu dropdown-menu-end shadow border mt-2">
+              <li><a class="dropdown-item text-danger" href="/auth/login.html"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
+      <main class="content-body">
+        <!-- Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="/questions/list.html">Question Bank</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Create Question</li>
+          </ol>
+        </nav>
+
+        <div class="mb-4">
+          <h3 class="fw-bold m-0">Create New Question Definition</h3>
+          <p class="text-muted small m-0">Add normalized questions and dynamic options (Question & QuestionOption schema)</p>
+        </div>
+
+        <div class="glass-card p-4 p-md-5" style="max-width: 850px;">
+          <form action="/questions/list.html" method="GET" onsubmit="showToast('Question created successfully!', 'success')">
+            
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Question Category (QuestionCategory Table)</label>
+                <select class="form-select form-control-custom">
+                  <option value="1">SQL Queries & Syntax</option>
+                  <option value="2">Database Architecture & ACID</option>
+                  <option value="3">Full Stack Web Development</option>
+                  <option value="4">Data Structures & Algorithms</option>
+                </select>
+              </div>
+              
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Difficulty Level (DifficultyLevel Table)</label>
+                <select class="form-select form-control-custom">
+                  <option value="1">Easy (Score: 1/10)</option>
+                  <option value="2" selected>Medium (Score: 5/10)</option>
+                  <option value="3">Hard (Score: 8/10)</option>
+                  <option value="4">Expert (Score: 10/10)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Question Type</label>
+                <select class="form-select form-control-custom" id="qTypeSelect" onchange="toggleOptionSection()">
+                  <option value="MCQ">MCQ (Single Choice)</option>
+                  <option value="MSQ">MSQ (Multiple Choice)</option>
+                  <option value="TRUE_FALSE">True / False</option>
+                  <option value="SHORT_ANSWER">Short Answer</option>
+                  <option value="DESCRIPTIVE">Descriptive Essay</option>
+                  <option value="CODING">Coding Assessment</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Default Marks</label>
+                <input type="number" class="form-control form-control-custom" value="50.00" step="0.5" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Estimated Time (Seconds)</label>
+                <input type="number" class="form-control form-control-custom" value="120" min="10" required>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-semibold">Question Statement (questionText)</label>
+              <textarea class="form-control form-control-custom" rows="3" placeholder="Enter question statement..." required>Which SQL clause is used to filter records in a SELECT statement?</textarea>
+            </div>
+
+            <!-- Dynamic QuestionOption Container -->
+            <div id="optionsWrapper" class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label small fw-semibold m-0">
+                  <i class="bi bi-list-task me-1 text-info"></i> Options List (QuestionOption Junction Table)
+                </label>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="addQuestionOption()">
+                  <i class="bi bi-plus-lg"></i> Add Option
+                </button>
+              </div>
+
+              <div id="optionsContainer">
+                <div class="input-group mb-2 option-row" id="option-row-0">
+                  <span class="input-group-text bg-light text-white font-monospace">A</span>
+                  <input type="text" class="form-control form-control-custom" value="WHERE" required>
+                  <div class="input-group-text bg-light text-white">
+                    <input class="form-check-input mt-0" type="checkbox" checked title="Mark as correct answer">
+                    <span class="ms-1 small">Correct</span>
+                  </div>
+                  <button class="btn btn-outline-danger" type="button" onclick="removeQuestionOption(this)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+
+                <div class="input-group mb-2 option-row" id="option-row-1">
+                  <span class="input-group-text bg-light text-white font-monospace">B</span>
+                  <input type="text" class="form-control form-control-custom" value="GROUP BY" required>
+                  <div class="input-group-text bg-light text-white">
+                    <input class="form-check-input mt-0" type="checkbox" title="Mark as correct answer">
+                    <span class="ms-1 small">Correct</span>
+                  </div>
+                  <button class="btn btn-outline-danger" type="button" onclick="removeQuestionOption(this)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-semibold">Solution Explanation (explanation)</label>
+              <textarea class="form-control form-control-custom" rows="2" placeholder="Optional explanation for correct answer...">The WHERE clause is used to extract only those records that satisfy a specified condition.</textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                <i class="bi bi-save-fill me-1"></i> Save Question
+              </button>
+              <a href="/questions/list.html" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    function toggleOptionSection() {
+      const type = document.getElementById('qTypeSelect').value;
+      const wrapper = document.getElementById('optionsWrapper');
+      if (type === 'MCQ' || type === 'MSQ') {
+        wrapper.classList.remove('d-none');
+      } else {
+        wrapper.classList.add('d-none');
+      }
+    }
+  </script>
+</body>
+</html>
