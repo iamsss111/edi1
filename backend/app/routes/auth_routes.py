@@ -6,6 +6,8 @@ Provides registration and login endpoints.
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.rbac import role_required
 
 from app.services.auth_service import (
     register_user,
@@ -118,9 +120,8 @@ def login():
     access_token = create_access_token(
         identity=str(user.user_id),
         additional_claims={
-            'role': user.role.role_name,
-            'email': user.email,
-        },
+            'role': user.role.role_name
+        }
     )
 
     return jsonify({
@@ -137,4 +138,28 @@ def login():
                 'role': user.role.role_name,
             },
         },
+    }), 200
+
+
+@auth_bp.get('/me')
+@jwt_required()
+def get_current_user():
+    """Return the identity of the currently authenticated user."""
+
+    current_user_id = get_jwt_identity()
+
+    return jsonify({
+        'success': True,
+        'message': 'JWT authentication successful',
+        'user_id': current_user_id
+    }), 200
+
+@auth_bp.get('/student-test')
+@role_required('STUDENT')
+def student_test():
+    """Test endpoint accessible only to students."""
+
+    return jsonify({
+        'success': True,
+        'message': 'Student RBAC access granted'
     }), 200
