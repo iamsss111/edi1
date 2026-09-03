@@ -51,6 +51,27 @@ def register_blueprints(app: Flask) -> None:
     # Authentication blueprint
     from app.routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
+
+    from app.routes.exam_attempt_routes import exam_attempt_bp
+    app.register_blueprint(exam_attempt_bp, url_prefix='/api/v1')
+
+    from app.routes.question_routes import question_bp
+    app.register_blueprint(question_bp,url_prefix='/api/v1')
+
+    from app.routes.student_answer_routes import student_answer_bp
+    app.register_blueprint(student_answer_bp, url_prefix='/api/v1')
+
+    from app.routes.exam_submission_routes import exam_submission_bp
+    app.register_blueprint(exam_submission_bp, url_prefix='/api/v1')
+
+    from app.routes.evaluation_routes import evaluation_bp
+    app.register_blueprint(evaluation_bp, url_prefix='/api/v1')
+
+    from app.routes.result_routes import result_bp
+    app.register_blueprint(result_bp, url_prefix='/api/v1')
+
+    from app.routes.integrity_routes import integrity_bp
+    app.register_blueprint(integrity_bp, url_prefix='/api/v1')
     
     # Additional blueprints will be registered here as features are implemented:
     # - Authentication routes
