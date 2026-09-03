@@ -80,11 +80,6 @@ class ExamAttempt(db.Model):
         uselist=False
     )
 
-    answers = db.relationship(
-    'StudentAnswer',
-    back_populates='attempt',
-    lazy=True
-    )
 
     __table_args__ = (
         db.CheckConstraint(
