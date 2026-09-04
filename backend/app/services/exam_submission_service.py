@@ -5,7 +5,7 @@ Contains business logic for submitting and locking
 an examination attempt.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.extensions.database import db
 from app.models import ExamAttempt
@@ -64,7 +64,41 @@ def submit_exam(user_id: int, attempt_id: int) -> ExamAttempt:
         )
 
     # ------------------------------------------------------------
-    # 4. Submit and lock attempt
+    # 4. Check examination expiry
+    # ------------------------------------------------------------
+
+    exam = registration.exam
+
+    if exam is None:
+        raise ValueError(
+            "Examination not found."
+        )
+
+    now = datetime.now()
+
+    expiry_time = (
+        attempt.started_at
+        + timedelta(minutes=exam.duration_minutes)
+    )
+
+    if now >= expiry_time:
+        attempt.status = 'AutoSubmitted'
+        attempt.submitted_at = expiry_time
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        raise ValueError(
+            "The examination time has expired."
+        )
+
+
+
+    # ------------------------------------------------------------
+    # 5. Submit and lock attempt
     # ------------------------------------------------------------
 
     attempt.status = 'Submitted'

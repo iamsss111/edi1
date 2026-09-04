@@ -4,7 +4,7 @@ Exam attempt service.
 Contains business logic for starting and managing examination attempts.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.extensions.database import db
 from app.models import (
@@ -97,6 +97,25 @@ def start_exam(user_id: int, exam_id: int) -> ExamAttempt:
     )
 
     if existing_attempt is not None:
+        expiry_time = (
+        existing_attempt.started_at
+        + timedelta(minutes=exam.duration_minutes)
+        )
+
+        if now >= expiry_time:
+            existing_attempt.status = 'AutoSubmitted'
+            existing_attempt.submitted_at = now
+
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
+            raise ValueError(
+                "The examination time has expired."
+            )
+
         return existing_attempt
 
     # Count all attempts made for this registration.

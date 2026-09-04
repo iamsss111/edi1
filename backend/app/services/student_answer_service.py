@@ -5,6 +5,8 @@ Contains business logic for saving, updating, and retrieving
 answers submitted by a student during an examination attempt.
 """
 
+from datetime import datetime, timedelta
+
 from app.extensions.database import db
 from app.models import (
     ExamAttempt,
@@ -55,6 +57,34 @@ def save_answer(
     if attempt.status != 'InProgress':
         raise ValueError(
             "Answers cannot be changed after the examination is submitted."
+        )
+
+    exam = attempt.registration.exam
+
+    if exam is None:
+        raise ValueError(
+            "Examination not found."
+        )
+
+    now = datetime.now()
+
+    expiry_time = (
+        attempt.started_at
+        + timedelta(minutes=exam.duration_minutes)
+    )
+
+    if now >= expiry_time:
+        attempt.status = 'AutoSubmitted'
+        attempt.submitted_at = expiry_time
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        raise ValueError(
+            "The examination time has expired."
         )
 
     exam_question = ExamQuestion.query.filter_by(

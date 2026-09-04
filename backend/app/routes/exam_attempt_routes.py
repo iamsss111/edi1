@@ -3,7 +3,7 @@ Examination attempt routes.
 
 Provides endpoints for students to start examinations.
 """
-
+from datetime import timedelta
 from flask import Blueprint, jsonify
 from flask_jwt_extended import get_jwt_identity
 
@@ -43,6 +43,14 @@ def start_exam_endpoint(exam_id: int):
                 'status': attempt.status,
                 'started_at': (
                     attempt.started_at.isoformat()
+                    if attempt.started_at
+                    else None
+                ),
+                'ends_at': (
+                    (
+                        attempt.started_at
+                        + timedelta(minutes=attempt.registration.exam.duration_minutes)
+                    ).isoformat()
                     if attempt.started_at
                     else None
                 ),
