@@ -24,19 +24,34 @@
         <div class="col-4">
           <div class="p-3 rounded border section-bg">
             <span class="text-muted small">Total Questions</span>
-            <h4 class="fw-bold text-dark m-0">2</h4>
+            <h4
+  class="fw-bold text-dark m-0"
+  id="totalQuestions"
+>
+  0
+</h4>
           </div>
         </div>
         <div class="col-4">
           <div class="p-3 rounded border section-bg">
             <span class="text-muted small">Answered</span>
-            <h4 class="fw-bold text-emerald m-0">2</h4>
+            <h4
+  class="fw-bold text-emerald m-0"
+  id="answeredCount"
+>
+  0
+</h4>
           </div>
         </div>
         <div class="col-4">
           <div class="p-3 rounded border section-bg">
             <span class="text-muted small">Unanswered</span>
-            <h4 class="fw-bold text-muted m-0">0</h4>
+            <h4
+  class="fw-bold text-muted m-0"
+  id="unansweredCount"
+>
+  0
+</h4>
           </div>
         </div>
       </div>
@@ -51,20 +66,8 @@
               <th>Review Flag</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>Q1</td>
-              <td>MCQ (Single Choice)</td>
-              <td><span class="badge bg-success">ANSWERED</span></td>
-              <td><span class="text-muted">No</span></td>
-            </tr>
-            <tr>
-              <td>Q2</td>
-              <td>MSQ (Multiple Choice)</td>
-              <td><span class="badge bg-success">ANSWERED</span></td>
-              <td><span class="text-muted">No</span></td>
-            </tr>
-          </tbody>
+        <tbody id="reviewTableBody">
+</tbody>
         </table>
       </div>
 
@@ -72,14 +75,158 @@
         <a href="/exam_runtime/exam.html" class="btn btn-outline-secondary">
           &larr; Return to Question Palette
         </a>
-        <a href="/exam_runtime/submitted.html" class="btn btn-success px-4 fw-bold">
-          <i class="bi bi-send-fill me-1"></i> Finalize & Submit Exam Attempt
-        </a>
+        <button
+  type="button"
+  id="submitExamButton"
+  class="btn btn-success px-4 fw-bold"
+>
+  <i class="bi bi-send-fill me-1"></i>
+  Finalize & Submit Exam Attempt
+</button>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/app.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/exam_engine.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    loadExamState();
+
+    const totalQuestions =
+      examState.questions.length;
+
+    const answeredCount =
+      getAnsweredCount();
+
+    const unansweredCount =
+      getUnansweredCount();
+
+
+    document.getElementById(
+      'totalQuestions'
+    ).textContent = totalQuestions;
+
+    document.getElementById(
+      'answeredCount'
+    ).textContent = answeredCount;
+
+    document.getElementById(
+      'unansweredCount'
+    ).textContent = unansweredCount;
+
+
+    const tableBody =
+      document.getElementById(
+        'reviewTableBody'
+      );
+
+
+    examState.questions.forEach(question => {
+
+      const questionNumber =
+        question.number;
+
+      const answered =
+        isQuestionAnswered(
+          questionNumber
+        );
+
+      const markedForReview =
+        isMarkedForReview(
+          questionNumber
+        );
+
+
+      const row =
+        document.createElement('tr');
+
+
+      row.innerHTML = `
+        <td>Q${questionNumber}</td>
+
+        <td>
+          ${getQuestionTypeLabel(question.type)}
+        </td>
+
+        <td>
+          ${
+            answered
+              ? '<span class="badge bg-success">ANSWERED</span>'
+              : '<span class="badge bg-secondary">UNANSWERED</span>'
+          }
+        </td>
+
+        <td>
+          ${
+            markedForReview
+              ? '<span class="text-warning fw-semibold">Yes</span>'
+              : '<span class="text-muted">No</span>'
+          }
+        </td>
+      `;
+
+
+      tableBody.appendChild(row);
+
+    });
+
+  });
+
+
+  function getQuestionTypeLabel(type) {
+
+    if (!type) {
+      return 'Question';
+    }
+
+    if (type === 'MCQ') {
+      return 'MCQ (Single Choice)';
+    }
+
+    if (type === 'MSQ') {
+      return 'MSQ (Multiple Choice)';
+    }
+
+    return type;
+  }
+  function finalizeExam() {
+
+  if (examState.isSubmitted) {
+    return;
+  }
+
+  const submissionPayload =
+    getSubmissionPayload();
+
+  console.log(
+    'Exam submission payload:',
+    submissionPayload
+  );
+
+  examState.isSubmitted = true;
+
+  saveExamState();
+
+  sessionStorage.setItem(
+    'exam_submission_payload',
+    JSON.stringify(submissionPayload)
+  );
+
+  window.location.href =
+    '/exam_runtime/submitted.html';
+}
+
+
+document
+  .getElementById('submitExamButton')
+  .addEventListener(
+    'click',
+    finalizeExam
+  );
+</script>
 </body>
 </html>

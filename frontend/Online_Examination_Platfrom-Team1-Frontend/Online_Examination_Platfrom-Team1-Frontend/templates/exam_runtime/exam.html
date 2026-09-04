@@ -45,19 +45,35 @@
 
           <div class="d-flex flex-column gap-3 mb-4">
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="radio" name="q1_options" onclick="markAnswered(1)">
+              <input
+  type="radio"
+  name="q1_options"
+  value="1"
+>
               <span class="fw-medium">WHERE</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="radio" name="q1_options" onclick="markAnswered(1)">
+              <input
+  type="radio"
+  name="q1_options"
+  value="2"
+>
               <span class="fw-medium">GROUP BY</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="radio" name="q1_options" onclick="markAnswered(1)">
+              <input
+  type="radio"
+  name="q1_options"
+  value="3"
+>
               <span class="fw-medium">ORDER BY</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="radio" name="q1_options" onclick="markAnswered(1)">
+             <input
+  type="radio"
+  name="q1_options"
+  value="4"
+>
               <span class="fw-medium">HAVING</span>
             </label>
           </div>
@@ -81,19 +97,35 @@
 
           <div class="d-flex flex-column gap-3 mb-4">
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="checkbox" name="q2_options" onclick="markAnswered(2)">
+              <input
+  type="checkbox"
+  name="q2_options"
+  value="1"
+>
               <span class="fw-medium">Atomicity</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="checkbox" name="q2_options" onclick="markAnswered(2)">
+              <input
+  type="checkbox"
+  name="q2_options"
+  value="2"
+>
               <span class="fw-medium">Consistency</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="checkbox" name="q2_options" onclick="markAnswered(2)">
+              <input
+  type="checkbox"
+  name="q2_options"
+  value="3"
+>
               <span class="fw-medium">Availability</span>
             </label>
             <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input type="checkbox" name="q2_options" onclick="markAnswered(2)">
+              <input
+  type="checkbox"
+  name="q2_options"
+  value="4"
+>
               <span class="fw-medium">Durability</span>
             </label>
           </div>
@@ -135,10 +167,40 @@
 
   <script src="/static/js/exam_timer.js"></script>
   <script src="/static/js/exam_engine.js"></script>
+   <script src="/static/js/integrity.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      startExamTimer(60, 'examTimer', autoSubmitExam);
-    });
-  </script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    /*
+     * DEVELOPMENT ONLY
+     *
+     * Create the examination end time only once.
+     * On refresh, reuse the existing end time.
+     *
+     * Later this value will come from the backend.
+     */
+
+    if (!examState.endsAt) {
+
+      examState.startedAt =
+        new Date().toISOString();
+
+      examState.endsAt =
+        new Date(
+          Date.now() + 60 * 60 * 1000
+        ).toISOString();
+
+      saveExamState();
+    }
+
+    startExamTimer(
+      examState.endsAt,
+      'examTimer',
+      autoSubmitExam
+    );
+    initializeIntegrityMonitoring();
+
+  });
+</script>
 </body>
 </html>

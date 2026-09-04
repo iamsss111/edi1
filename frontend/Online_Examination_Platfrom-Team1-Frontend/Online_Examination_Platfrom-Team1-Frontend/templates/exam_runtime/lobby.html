@@ -35,13 +35,66 @@
       </label>
     </div>
 
-    <div class="d-flex gap-3">
-      <a href="/student/dashboard.html" class="btn btn-outline-secondary w-50 py-2">Cancel</a>
-      <a href="/exam_runtime/exam.html" class="btn btn-success w-50 py-2 fw-bold">
-        <i class="bi bi-play-fill me-1"></i> Begin Exam
-      </a>
-    </div>
-  </div>
+   <div class="d-flex gap-3">
 
+  <a
+    href="/student/dashboard.html"
+    class="btn btn-outline-secondary w-50 py-2"
+  >
+    Cancel
+  </a>
+
+  <button
+    type="button"
+    id="beginExamButton"
+    class="btn btn-success w-50 py-2 fw-bold"
+  >
+    <i class="bi bi-play-fill me-1"></i>
+    Begin Exam
+  </button>
+
+</div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    const agreement =
+      document.getElementById('agreeRules');
+
+    const beginButton =
+      document.getElementById('beginExamButton');
+
+
+    beginButton.addEventListener('click', () => {
+
+      if (!agreement.checked) {
+
+        agreement.focus();
+
+        agreement.setCustomValidity(
+          'Please confirm that you have read and understood the examination instructions.'
+        );
+
+        agreement.reportValidity();
+
+        return;
+      }
+
+      agreement.setCustomValidity('');
+
+      window.location.href =
+        '/exam_runtime/exam.html';
+    });
+
+
+    agreement.addEventListener(
+      'change',
+      () => {
+        agreement.setCustomValidity('');
+      }
+    );
+
+  });
+</script>
 </body>
 </html>
