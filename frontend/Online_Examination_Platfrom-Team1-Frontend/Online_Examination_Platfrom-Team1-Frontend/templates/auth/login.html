@@ -3,436 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Login - MMCOE Online Examination Platform</title>
-
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-  >
-
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/static/css/styles.css">
-
   <style>
     body {
-      background:
-        radial-gradient(
-          circle at top right,
-          rgba(139, 21, 43, 0.08),
-          transparent 45%
-        ),
-        radial-gradient(
-          circle at bottom left,
-          rgba(27, 54, 93, 0.08),
-          transparent 45%
-        ),
-        var(--bg-page);
-
+      background: radial-gradient(circle at top right, rgba(139, 21, 43, 0.08), transparent 45%),
+                  radial-gradient(circle at bottom left, rgba(27, 54, 93, 0.08), transparent 45%),
+                  var(--bg-page);
       display: flex;
       align-items: center;
       justify-content: center;
-
       min-height: 100vh;
       padding: 1.5rem;
     }
-
     .auth-card {
       width: 100%;
       max-width: 480px;
       padding: 2.5rem;
       border-top: 4px solid var(--mmcoe-maroon);
     }
-
-    #loginError {
-      display: none;
-    }
+   
   </style>
 </head>
-
 <body>
 
   <div class="glass-card auth-card">
-
-    <!-- Header -->
     <div class="text-center mb-4">
-
-      <div
-        class="d-inline-flex align-items-center justify-content-center
-               bg-light p-3 rounded-circle border mb-3"
-      >
+      <div class="d-inline-flex align-items-center justify-content-center bg-light p-3 rounded-circle border mb-3">
         <i class="bi bi-mortarboard-fill text-danger fs-2"></i>
       </div>
-
-      <h3 class="fw-bold mb-1 text-dark">
-        MMCOE ExamPortal
-      </h3>
-
-      <p class="text-muted small">
-        Marathwada Mitra Mandal's College of Engineering
-      </p>
-
+      <h3 class="fw-bold mb-1 text-dark">MMCOE ExamPortal</h3>
+      <p class="text-muted small">Marathwada Mitra Mandal's College of Engineering</p>
     </div>
 
-
-    <!-- Login Error -->
-    <div
-      id="loginError"
-      class="alert alert-danger small mb-3"
-      role="alert"
-      aria-live="polite"
-    >
-      <i class="bi bi-exclamation-triangle-fill me-1"></i>
-      <span id="loginErrorMessage">
-        Unable to sign in.
-      </span>
+    <!-- Account Locked Alert (hidden by default) -->
+    <div id="accountLockedAlert" class="alert alert-danger d-none small mb-3">
+      <i class="bi bi-shield-lock-fill me-1"></i> Account locked due to excessive failed login attempts. Contact administrator.
     </div>
 
+   
 
-    <!-- Login Form -->
-    <form id="loginForm">
-
-      <!-- Email -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="mb-3">
-
-        <label
-          for="email"
-          class="form-label small fw-semibold text-dark"
-        >
-          Email Address
-        </label>
-
+        <label for="email" class="form-label small fw-semibold text-dark">Email Address</label>
         <div class="input-group">
-
-          <span class="input-group-text bg-light text-muted">
-            <i class="bi bi-envelope"></i>
-          </span>
-
-          <input
-            type="email"
-            class="form-control form-control-custom"
-            id="email"
-            name="email"
-            placeholder="Enter your email address"
-            autocomplete="email"
-            required
-          >
-
+          <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+         <input type="email" class="form-control form-control-custom" id="email" placeholder="student@college.edu" required>
         </div>
-
       </div>
 
-
-      <!-- Password -->
       <div class="mb-3">
-
-        <div
-          class="d-flex justify-content-between
-                 align-items-center mb-1"
-        >
-
-          <label
-            for="password"
-            class="form-label small fw-semibold m-0 text-dark"
-          >
-            Password
-          </label>
-
-          <a
-            href="/auth/forgot_password.html"
-            class="text-info small text-decoration-none"
-          >
-            Forgot Password?
-          </a>
-
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label for="password" class="form-label small fw-semibold m-0 text-dark">Password</label>
+          <a href="/auth/forgot_password.html" class="text-info small text-decoration-none">Forgot Password?</a>
         </div>
-
         <div class="input-group">
-
-          <span class="input-group-text bg-light text-muted">
-            <i class="bi bi-lock"></i>
-          </span>
-
-          <input
-            type="password"
-            class="form-control form-control-custom"
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          >
-
-          <button
-            class="btn btn-outline-secondary"
-            type="button"
-            id="togglePasswordButton"
-            aria-label="Show password"
-          >
+          <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+          <input type="password" class="form-control form-control-custom" id="password" placeholder="Enter your password" required>
+          <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password', 'passIcon')">
             <i class="bi bi-eye" id="passIcon"></i>
           </button>
-
         </div>
-
       </div>
 
-
-      <!-- Remember Me -->
-      <div
-        class="d-flex justify-content-between
-               align-items-center mb-4"
-      >
-
+      <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="form-check">
-
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="rememberMe"
-          >
-
-          <label
-            class="form-check-label small text-muted"
-            for="rememberMe"
-          >
-            Remember me
-          </label>
-
+          <input class="form-check-input" type="checkbox" id="rememberMe">
+          <label class="form-check-label small text-muted" for="rememberMe">Remember me</label>
         </div>
-
       </div>
 
-
-      <!-- Submit -->
-      <button
-        type="submit"
-        class="btn btn-primary-custom w-100 py-2
-               justify-content-center fs-6"
-        id="loginButton"
-      >
-
-        <span id="loginButtonContent">
-          <i class="bi bi-box-arrow-in-right"></i>
-          Sign In to Portal
-        </span>
-
-        <span
-          id="loginButtonLoading"
-          class="d-none"
-        >
-          <span
-            class="spinner-border spinner-border-sm me-2"
-            aria-hidden="true"
-          ></span>
-
-          Signing in...
-        </span>
-
+      <button type="submit" class="btn btn-primary-custom w-100 py-2 justify-content-center fs-6">
+        <i class="bi bi-box-arrow-in-right"></i> Sign In to Portal
       </button>
-
     </form>
 
-
-    <!-- Registration -->
     <div class="text-center mt-4 border-top pt-3">
-
-      <span class="text-muted small">
-        New student?
-      </span>
-
-      <a
-        href="/auth/register.html"
-        class="text-info small fw-semibold
-               text-decoration-none ms-1"
-      >
-        Register Account
-      </a>
-
+      <span class="text-muted small">New student?</span>
+      <a href="/auth/register.html" class="text-info small fw-semibold text-decoration-none ms-1">Register Account</a>
     </div>
-
   </div>
 
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/api.js"></script>
+<script>
+    async function handleLogin(e) {
+  e.preventDefault();
 
-  <!-- Shared utilities -->
-  <script src="/static/js/app.js"></script>
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const rememberMeInput = document.getElementById('rememberMe');
 
-  <!-- API client -->
-  <script src="/static/js/api.js"></script>
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  const rememberMe = rememberMeInput.checked;
 
+  if (!email || !password) {
+    showToast('Email and password are required.', 'warning');
+    return;
+  }
 
-  <script>
-    const loginForm = document.getElementById('loginForm');
-    const loginButton = document.getElementById('loginButton');
-    const loginButtonContent = document.getElementById('loginButtonContent');
-    const loginButtonLoading = document.getElementById('loginButtonLoading');
+  const submitButton = e.target.querySelector('button[type="submit"]');
 
-    const loginError = document.getElementById('loginError');
-    const loginErrorMessage = document.getElementById('loginErrorMessage');
-
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const rememberMeInput = document.getElementById('rememberMe');
-
-    const togglePasswordButton =
-      document.getElementById('togglePasswordButton');
-
-    const passIcon = document.getElementById('passIcon');
-
-
-    /**
-     * Display a login error.
-     */
-    function showLoginError(message) {
-      loginErrorMessage.textContent = message;
-      loginError.style.display = 'block';
+  try {
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Signing In...';
     }
 
+    const user = await login(email, password, rememberMe);
 
-    /**
-     * Hide the login error.
-     */
-    function hideLoginError() {
-      loginError.style.display = 'none';
+    showToast('Login successful. Redirecting...', 'success');
+
+    const dashboardUrl = getDashboardUrl(user.role);
+
+    if (!dashboardUrl) {
+      throw new Error('Your account has an unsupported role.');
     }
 
+    setTimeout(() => {
+      window.location.href = dashboardUrl;
+    }, 500);
 
-    /**
-     * Change the login button to loading state.
-     */
-    function setLoginLoading(isLoading) {
+  } catch (error) {
+    console.error('Login error:', error);
 
-      loginButton.disabled = isLoading;
+    showToast(
+      error.message || 'Unable to sign in. Please check your credentials.',
+      'danger'
+    );
 
-      if (isLoading) {
-        loginButtonContent.classList.add('d-none');
-        loginButtonLoading.classList.remove('d-none');
-      } else {
-        loginButtonContent.classList.remove('d-none');
-        loginButtonLoading.classList.add('d-none');
-      }
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.innerHTML =
+        '<i class="bi bi-box-arrow-in-right"></i> Sign In to Portal';
     }
-
-
-    /**
-     * Toggle password visibility.
-     */
-    togglePasswordButton.addEventListener('click', () => {
-
-      const isPassword =
-        passwordInput.type === 'password';
-
-      passwordInput.type =
-        isPassword ? 'text' : 'password';
-
-      passIcon.classList.toggle(
-        'bi-eye',
-        !isPassword
-      );
-
-      passIcon.classList.toggle(
-        'bi-eye-slash',
-        isPassword
-      );
-
-      togglePasswordButton.setAttribute(
-        'aria-label',
-        isPassword
-          ? 'Hide password'
-          : 'Show password'
-      );
-    });
-
-
-    /**
-     * Handle real backend login.
-     */
-    loginForm.addEventListener('submit', async (event) => {
-
-      event.preventDefault();
-
-      hideLoginError();
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const rememberMe = rememberMeInput.checked;
-
-
-      if (!email || !password) {
-        showLoginError(
-          'Email and password are required.'
-        );
-        return;
-      }
-
-
-      setLoginLoading(true);
-
-
-      try {
-
-        const user = await login(
-          email,
-          password,
-          rememberMe
-        );
-
-
-        if (!user || !user.role) {
-          throw new Error(
-            'The server did not return a valid user role.'
-          );
-        }
-
-
-        showToast(
-          'Login successful. Redirecting...',
-          'success'
-        );
-
-
-        redirectByRole(user.role);
-
-      } catch (error) {
-
-        console.error('Login error:', error);
-
-
-        if (error.status === 401) {
-
-          showLoginError(
-            error.data?.message ||
-            'Invalid email or password.'
-          );
-
-        } else if (error instanceof TypeError) {
-
-          showLoginError(
-            'Unable to connect to the server. ' +
-            'Please make sure the backend is running.'
-          );
-
-        } else {
-
-          showLoginError(
-            error.message ||
-            'Unable to sign in. Please try again.'
-          );
-        }
-
-      } finally {
-
-        setLoginLoading(false);
-
-      }
-
-    });
+  }
+}
   </script>
-
 </body>
 </html>

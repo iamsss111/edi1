@@ -13,8 +13,10 @@
   <!-- Exam Top Header -->
   <header class="exam-header">
     <div class="d-flex align-items-center gap-3">
-      <span class="fw-bold fs-5 text-dark">DBMS Mid-Term Assessment</span>
-      <span class="badge bg-secondary">CS101</span>
+      <span class="fw-bold fs-5 text-dark" id="examTitle">
+  DBMS Mid-Term Assessment
+</span>
+<span class="badge bg-secondary" id="examSubject">CS101</span>
     </div>
     
     <div class="d-flex align-items-center gap-4">
@@ -33,120 +35,18 @@
     <div class="row g-4">
       
       <!-- Left: Question Panel -->
-      <div class="col-lg-8">
-        <!-- Question 1 -->
-        <div class="glass-card p-4 question-card" id="question-1">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="badge bg-primary fs-6">Question 1 of 2</span>
-            <span class="text-muted small">50.00 Marks &bull; MCQ</span>
-          </div>
-
-          <h5 class="fw-bold mb-4 text-dark">Which SQL clause is used to filter records in a SELECT statement?</h5>
-
-          <div class="d-flex flex-column gap-3 mb-4">
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="radio"
-  name="q1_options"
-  value="1"
->
-              <span class="fw-medium">WHERE</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="radio"
-  name="q1_options"
-  value="2"
->
-              <span class="fw-medium">GROUP BY</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="radio"
-  name="q1_options"
-  value="3"
->
-              <span class="fw-medium">ORDER BY</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-             <input
-  type="radio"
-  name="q1_options"
-  value="4"
->
-              <span class="fw-medium">HAVING</span>
-            </label>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center border-top pt-3">
-            <button class="btn btn-outline-warning btn-sm" onclick="toggleReview(1)">
-              <i class="bi bi-bookmark-star"></i> Mark for Review
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="navigateQuestion(2)">Next Question &rarr;</button>
-          </div>
-        </div>
-
-        <!-- Question 2 -->
-        <div class="glass-card p-4 question-card d-none" id="question-2">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="badge bg-primary fs-6">Question 2 of 2</span>
-            <span class="text-muted small">50.00 Marks &bull; MSQ</span>
-          </div>
-
-          <h5 class="fw-bold mb-4 text-dark">Which of the following are ACID properties in DBMS? (Select all that apply)</h5>
-
-          <div class="d-flex flex-column gap-3 mb-4">
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="checkbox"
-  name="q2_options"
-  value="1"
->
-              <span class="fw-medium">Atomicity</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="checkbox"
-  name="q2_options"
-  value="2"
->
-              <span class="fw-medium">Consistency</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="checkbox"
-  name="q2_options"
-  value="3"
->
-              <span class="fw-medium">Availability</span>
-            </label>
-            <label class="p-3 rounded border section-bg d-flex align-items-center gap-3 cursor-pointer">
-              <input
-  type="checkbox"
-  name="q2_options"
-  value="4"
->
-              <span class="fw-medium">Durability</span>
-            </label>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center border-top pt-3">
-            <button class="btn btn-outline-secondary btn-sm" onclick="navigateQuestion(1)">&larr; Previous</button>
-            <button class="btn btn-outline-warning btn-sm" onclick="toggleReview(2)">
-              <i class="bi bi-bookmark-star"></i> Mark for Review
-            </button>
-          </div>
-        </div>
-      </div>
+<div class="col-lg-8">
+  <div id="questionsContainer"></div>
+</div>
 
       <!-- Right: Navigation Palette & Status -->
       <div class="col-lg-4">
         <div class="glass-card p-4 mb-3">
           <h6 class="fw-bold mb-3 text-dark">Question Navigation Palette</h6>
-          <div class="d-flex gap-2 flex-wrap mb-4">
-            <button class="question-palette-btn current" id="palette-btn-1" onclick="navigateQuestion(1)">1</button>
-            <button class="question-palette-btn" id="palette-btn-2" onclick="navigateQuestion(2)">2</button>
-          </div>
+          <div
+  class="d-flex gap-2 flex-wrap mb-4"
+  id="questionPalette"
+></div>
 
           <div class="small text-muted d-flex flex-column gap-2 border-top pt-3">
             <div class="d-flex align-items-center gap-2">
@@ -165,42 +65,7 @@
     </div>
   </div>
 
-  <script src="/static/js/exam_timer.js"></script>
-  <script src="/static/js/exam_engine.js"></script>
-   <script src="/static/js/integrity.js"></script>
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-
-    /*
-     * DEVELOPMENT ONLY
-     *
-     * Create the examination end time only once.
-     * On refresh, reuse the existing end time.
-     *
-     * Later this value will come from the backend.
-     */
-
-    if (!examState.endsAt) {
-
-      examState.startedAt =
-        new Date().toISOString();
-
-      examState.endsAt =
-        new Date(
-          Date.now() + 60 * 60 * 1000
-        ).toISOString();
-
-      saveExamState();
-    }
-
-    startExamTimer(
-      examState.endsAt,
-      'examTimer',
-      autoSubmitExam
-    );
-    initializeIntegrityMonitoring();
-
-  });
-</script>
+  <script src="/static/js/api.js"></script>
+<script src="/static/js/exam_engine.js"></script>
 </body>
 </html>

@@ -35,66 +35,85 @@
       </label>
     </div>
 
-   <div class="d-flex gap-3">
+    <div class="d-flex gap-3">
+      <a href="/student/dashboard.html" class="btn btn-outline-secondary w-50 py-2">Cancel</a>
+      <button
+  type="button"
+  id="beginExamButton"
+  class="btn btn-success w-50 py-2 fw-bold"
+  onclick="beginExam(event)"
+>
+  <i class="bi bi-play-fill me-1"></i> Begin Exam
+</button>
+    </div>
+    </div>
 
-  <a
-    href="/student/dashboard.html"
-    class="btn btn-outline-secondary w-50 py-2"
-  >
-    Cancel
-  </a>
+  <script src="/static/js/app.js"></script>
+<script src="/static/js/api.js"></script>
 
-  <button
-    type="button"
-    id="beginExamButton"
-    class="btn btn-success w-50 py-2 fw-bold"
-  >
-    <i class="bi bi-play-fill me-1"></i>
-    Begin Exam
-  </button>
+  <script>
+    async function beginExam(event) {
+      event.preventDefault();
 
-</div>
-  </div>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
+      const agreeRules = document.getElementById('agreeRules');
+      const beginButton = document.getElementById('beginExamButton');
 
-    const agreement =
-      document.getElementById('agreeRules');
-
-    const beginButton =
-      document.getElementById('beginExamButton');
-
-
-    beginButton.addEventListener('click', () => {
-
-      if (!agreement.checked) {
-
-        agreement.focus();
-
-        agreement.setCustomValidity(
-          'Please confirm that you have read and understood the examination instructions.'
+      if (!agreeRules.checked) {
+        showToast(
+          'Please confirm that you have read and understood the exam instructions.',
+          'warning'
         );
-
-        agreement.reportValidity();
-
         return;
       }
 
-      agreement.setCustomValidity('');
+      try {
+        beginButton.disabled = true;
+        beginButton.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-2"></span>Starting Exam...';
 
-      window.location.href =
-        '/exam_runtime/exam.html';
-    });
+        const response = await apiRequest('/exams/1/start', {
+          method: 'POST'
+        });
 
+        if (
+          !response ||
+          !response.success ||
+          !response.data ||
+          !response.data.attempt_id
+        ) {
+          throw new Error('The server returned an invalid exam start response.');
+        }
 
-    agreement.addEventListener(
-      'change',
-      () => {
-        agreement.setCustomValidity('');
+        const attempt = response.data;
+
+        sessionStorage.setItem(
+          'exam_runtime_start',
+          JSON.stringify({
+            exam_id: attempt.exam_id,
+            attempt_id: attempt.attempt_id,
+            registration_id: attempt.registration_id,
+            attempt_number: attempt.attempt_number,
+            status: attempt.status,
+            started_at: attempt.started_at
+          })
+        );
+
+        window.location.href = '/exam_runtime/exam.html';
+
+      } catch (error) {
+        console.error('Unable to start exam:', error);
+
+        showToast(
+          error.message || 'Unable to start the examination.',
+          'danger'
+        );
+
+        beginButton.disabled = false;
+        beginButton.innerHTML =
+          '<i class="bi bi-play-fill me-1"></i> Begin Exam';
       }
-    );
+    }
+  </script>
 
-  });
-</script>
 </body>
 </html>
