@@ -72,7 +72,28 @@ def register_blueprints(app: Flask) -> None:
 
     from app.routes.integrity_routes import integrity_bp
     app.register_blueprint(integrity_bp, url_prefix='/api/v1')
-    
+
+    from app.routes.faculty_subject_routes import faculty_subject_bp
+    app.register_blueprint(faculty_subject_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_question_routes import faculty_question_bp
+    app.register_blueprint(faculty_question_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_question_option_routes import (faculty_question_option_bp)
+    app.register_blueprint(faculty_question_option_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_exam_routes import faculty_exam_bp
+    app.register_blueprint(faculty_exam_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_exam_question_routes import faculty_exam_question_bp
+    app.register_blueprint(faculty_exam_question_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_exam_schedule_routes import faculty_exam_schedule_bp
+    app.register_blueprint(faculty_exam_schedule_bp, url_prefix='/api/v1')
+
+    from app.routes.faculty_exam_publish_routes import faculty_exam_publish_bp
+    app.register_blueprint(faculty_exam_publish_bp, url_prefix='/api/v1')
+
     # Additional blueprints will be registered here as features are implemented:
     # - Authentication routes
     # - User routes
