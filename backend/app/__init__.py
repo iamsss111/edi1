@@ -3,7 +3,7 @@ Online Examination Platform - Flask Application Factory
 """
 from flask import Flask
 from flask_jwt_extended import JWTManager
-
+from flask_cors import CORS
 from app.extensions.database import db
 from app.config.settings import config
 from flask_migrate import Migrate
@@ -27,6 +27,15 @@ def create_app(config_name: str = 'development') -> Flask:
     
     # Load configuration
     app.config.from_object(config.get(config_name, config['default']))
+
+    CORS(
+        app,
+        origins=[
+            'http://127.0.0.1:5500',
+            'http://localhost:5500'
+        ],
+        supports_credentials=False
+    )
     
     # Initialize extensions
     db.init_app(app)
