@@ -10,6 +10,8 @@ from flask_migrate import Migrate
 from app import models
 
 migrate = Migrate()
+
+
 def create_app(config_name: str = 'development') -> Flask:
     """
     Create and configure the Flask application.
@@ -56,7 +58,7 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(exam_attempt_bp, url_prefix='/api/v1')
 
     from app.routes.question_routes import question_bp
-    app.register_blueprint(question_bp,url_prefix='/api/v1')
+    app.register_blueprint(question_bp, url_prefix='/api/v1')
 
     from app.routes.student_answer_routes import student_answer_bp
     app.register_blueprint(student_answer_bp, url_prefix='/api/v1')
@@ -79,7 +81,7 @@ def register_blueprints(app: Flask) -> None:
     from app.routes.faculty_question_routes import faculty_question_bp
     app.register_blueprint(faculty_question_bp, url_prefix='/api/v1')
 
-    from app.routes.faculty_question_option_routes import (faculty_question_option_bp)
+    from app.routes.faculty_question_option_routes import faculty_question_option_bp
     app.register_blueprint(faculty_question_option_bp, url_prefix='/api/v1')
 
     from app.routes.faculty_exam_routes import faculty_exam_bp
@@ -93,14 +95,3 @@ def register_blueprints(app: Flask) -> None:
 
     from app.routes.faculty_exam_publish_routes import faculty_exam_publish_bp
     app.register_blueprint(faculty_exam_publish_bp, url_prefix='/api/v1')
-
-    # Additional blueprints will be registered here as features are implemented:
-    # - Authentication routes
-    # - User routes
-    # - Question routes
-    # - Exam routes
-    # - Attempt routes
-    # - Result routes
-    # - Proctoring routes
-    # - Notification routes
-    # - Admin routes
