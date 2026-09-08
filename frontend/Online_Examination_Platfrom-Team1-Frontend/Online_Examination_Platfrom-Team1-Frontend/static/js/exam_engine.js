@@ -359,4 +359,5 @@ function autoSubmitExam() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeExam();
+  initializeIntegrityMonitoring();
 });

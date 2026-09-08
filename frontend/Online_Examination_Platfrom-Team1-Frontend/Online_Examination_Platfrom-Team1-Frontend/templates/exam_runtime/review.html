@@ -89,30 +89,157 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/static/js/app.js"></script>
-<script src="/static/js/exam_engine.js"></script>
+<script src="/static/js/api.js"></script>
+
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  let reviewState = {
+    attemptId: null,
+    examId: null,
+    questions: [],
+    answers: {},
+    isSubmitted: false
+  };
 
-    loadExamState();
+
+  document.addEventListener('DOMContentLoaded', async () => {
+
+    try {
+
+      const storedAttempt =
+        sessionStorage.getItem('exam_runtime_start');
+
+      if (!storedAttempt) {
+        throw new Error(
+          'No active examination attempt was found.'
+        );
+      }
+
+      const attempt =
+        JSON.parse(storedAttempt);
+
+      reviewState.attemptId =
+        attempt.attempt_id;
+
+      reviewState.examId =
+        attempt.exam_id;
+
+
+      const [questionsResponse, answersResponse] =
+        await Promise.all([
+
+          apiRequest(
+            `/exams/${reviewState.examId}/questions`,
+            {
+              method: 'GET'
+            }
+          ),
+
+          apiRequest(
+            `/attempts/${reviewState.attemptId}/answers`,
+            {
+              method: 'GET'
+            }
+          )
+
+        ]);
+
+
+      if (
+        !questionsResponse ||
+        !questionsResponse.success ||
+        !questionsResponse.data ||
+        !Array.isArray(
+          questionsResponse.data.questions
+        )
+      ) {
+        throw new Error(
+          'Unable to retrieve examination questions.'
+        );
+      }
+
+
+      if (
+        !answersResponse ||
+        !answersResponse.success ||
+        !answersResponse.data ||
+        !Array.isArray(
+          answersResponse.data.answers
+        )
+      ) {
+        throw new Error(
+          'Unable to retrieve saved examination answers.'
+        );
+      }
+
+
+      reviewState.questions =
+        questionsResponse.data.questions;
+
+
+      answersResponse.data.answers.forEach(answer => {
+
+        reviewState.answers[
+          answer.exam_question_id
+        ] = answer.selected_option_id;
+
+      });
+
+
+      renderReview();
+
+    } catch (error) {
+
+      console.error(
+        'Failed to load examination review:',
+        error
+      );
+
+      alert(
+        error.message ||
+        'Unable to load the examination review.'
+      );
+
+    }
+
+  });
+
+
+  function renderReview() {
 
     const totalQuestions =
-      examState.questions.length;
+      reviewState.questions.length;
+
 
     const answeredCount =
-      getAnsweredCount();
+      reviewState.questions.filter(question => {
+
+        const selectedOption =
+          reviewState.answers[
+            question.exam_question_id
+          ];
+
+        return (
+          selectedOption !== null &&
+          selectedOption !== undefined
+        );
+
+      }).length;
+
 
     const unansweredCount =
-      getUnansweredCount();
+      totalQuestions - answeredCount;
 
 
     document.getElementById(
       'totalQuestions'
     ).textContent = totalQuestions;
 
+
     document.getElementById(
       'answeredCount'
     ).textContent = answeredCount;
+
 
     document.getElementById(
       'unansweredCount'
@@ -125,56 +252,56 @@
       );
 
 
-    examState.questions.forEach(question => {
-
-      const questionNumber =
-        question.number;
-
-      const answered =
-        isQuestionAnswered(
-          questionNumber
-        );
-
-      const markedForReview =
-        isMarkedForReview(
-          questionNumber
-        );
+    tableBody.innerHTML = '';
 
 
-      const row =
-        document.createElement('tr');
+    reviewState.questions.forEach(
+      (question, index) => {
+
+        const questionNumber =
+          question.number || index + 1;
 
 
-      row.innerHTML = `
-        <td>Q${questionNumber}</td>
-
-        <td>
-          ${getQuestionTypeLabel(question.type)}
-        </td>
-
-        <td>
-          ${
-            answered
-              ? '<span class="badge bg-success">ANSWERED</span>'
-              : '<span class="badge bg-secondary">UNANSWERED</span>'
-          }
-        </td>
-
-        <td>
-          ${
-            markedForReview
-              ? '<span class="text-warning fw-semibold">Yes</span>'
-              : '<span class="text-muted">No</span>'
-          }
-        </td>
-      `;
+        const answered =
+          reviewState.answers[
+            question.exam_question_id
+          ] !== null &&
+          reviewState.answers[
+            question.exam_question_id
+          ] !== undefined;
 
 
-      tableBody.appendChild(row);
+        const row =
+          document.createElement('tr');
 
-    });
 
-  });
+        row.innerHTML = `
+          <td>Q${questionNumber}</td>
+
+          <td>
+            ${getQuestionTypeLabel(question.type)}
+          </td>
+
+          <td>
+            ${
+              answered
+                ? '<span class="badge bg-success">ANSWERED</span>'
+                : '<span class="badge bg-secondary">UNANSWERED</span>'
+            }
+          </td>
+
+          <td>
+            <span class="text-muted">No</span>
+          </td>
+        `;
+
+
+        tableBody.appendChild(row);
+
+      }
+    );
+
+  }
 
 
   function getQuestionTypeLabel(type) {
@@ -193,40 +320,123 @@
 
     return type;
   }
-  function finalizeExam() {
 
-  if (examState.isSubmitted) {
-    return;
+
+  async function finalizeExam() {
+
+    if (reviewState.isSubmitted) {
+      return;
+    }
+
+
+    if (!reviewState.attemptId) {
+
+      alert(
+        'No active examination attempt was found.'
+      );
+
+      return;
+    }
+
+
+    const submitButton =
+      document.getElementById(
+        'submitExamButton'
+      );
+
+
+    const confirmed =
+      confirm(
+        'Are you sure you want to submit your examination? You will not be able to change your answers afterward.'
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+
+      submitButton.disabled = true;
+
+      submitButton.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+
+
+      const response =
+        await apiRequest(
+          `/attempts/${reviewState.attemptId}/submit`,
+          {
+            method: 'POST'
+          }
+        );
+
+
+      if (
+        !response ||
+        !response.success ||
+        !response.data
+      ) {
+        throw new Error(
+          response?.message ||
+          'The server returned an invalid submission response.'
+        );
+      }
+
+
+      reviewState.isSubmitted = true;
+
+
+      sessionStorage.setItem(
+        'exam_submission_response',
+        JSON.stringify(response.data)
+      );
+
+
+      window.location.href =
+        '/exam_runtime/submitted.html';
+
+
+    } catch (error) {
+
+      console.error(
+        'Exam submission failed:',
+        error
+      );
+
+
+      reviewState.isSubmitted = false;
+
+
+      submitButton.disabled = false;
+
+
+      submitButton.innerHTML =
+        '<i class="bi bi-send-fill me-1"></i> Finalize & Submit Exam Attempt';
+
+
+      alert(
+        error.message ||
+        'Unable to submit the examination. Please try again.'
+      );
+
+    }
+
   }
 
-  const submissionPayload =
-    getSubmissionPayload();
 
-  console.log(
-    'Exam submission payload:',
-    submissionPayload
-  );
+  document
+    .getElementById('submitExamButton')
+    .addEventListener(
+      'click',
+      finalizeExam
+    );
 
-  examState.isSubmitted = true;
-
-  saveExamState();
-
-  sessionStorage.setItem(
-    'exam_submission_payload',
-    JSON.stringify(submissionPayload)
-  );
-
-  window.location.href =
-    '/exam_runtime/submitted.html';
-}
-
-
-document
-  .getElementById('submitExamButton')
-  .addEventListener(
-    'click',
-    finalizeExam
-  );
 </script>
 </body>
 </html>
+
+
+
+

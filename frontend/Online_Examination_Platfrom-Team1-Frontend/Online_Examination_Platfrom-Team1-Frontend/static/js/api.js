@@ -151,7 +151,7 @@ async function apiRequest(endpoint, options = {}) {
  * Authenticate a user with the backend.
  */
 async function login(email, password, rememberMe = false) {
-  const responseData = await apiRequest('/auth/login', {
+  const responseData = await apiRequest('/login', {
     method: 'POST',
     body: JSON.stringify({
       email,
@@ -184,7 +184,7 @@ async function login(email, password, rememberMe = false) {
  * Retrieve the currently authenticated user from the backend.
  */
 async function getCurrentUser() {
-  return apiRequest('/auth/me', {
+  return apiRequest('/me', {
     method: 'GET'
   });
 }
@@ -234,3 +234,4 @@ function redirectByRole(role) {
 
   window.location.href = dashboardUrl;
 }
+
