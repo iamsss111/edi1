@@ -18,6 +18,7 @@ from app.models.student_answer import StudentAnswer
 from app.models.result import Result
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog
+from app.models.faculty_subject import FacultySubject
 
 __all__ = [
     'Role',
@@ -25,6 +26,7 @@ __all__ = [
     'Department',
     'Student',
     'Faculty',
+    'FacultySubject',
     'Subject',
     'Exam',
     'ExamSchedule',

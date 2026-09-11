@@ -68,6 +68,13 @@ class Faculty(db.Model):
         back_populates='faculties'
     )
 
+    # Faculty 1 ───── M FacultySubject
+    subject_assignments = db.relationship(
+        'FacultySubject',
+        back_populates='faculty',
+        lazy=True
+    )
+
     __table_args__ = (
         db.CheckConstraint(
             "TRIM(EmployeeNumber) <> ''",

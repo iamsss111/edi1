@@ -7,7 +7,10 @@ Provides endpoints for faculty question management.
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
-from app.services.faculty_question_service import (create_question, get_my_questions)
+from app.services.faculty_question_service import (
+    create_question,
+    get_my_questions
+)
 from app.utils.rbac import role_required
 
 
@@ -18,7 +21,8 @@ faculty_question_bp = Blueprint('faculty_question', __name__)
 @role_required('FACULTY')
 def create_question_endpoint():
     """
-    Create a new question for the authenticated faculty member.
+    Create a new question for a subject currently assigned
+    to the authenticated faculty member.
     """
 
     current_user_id = get_jwt_identity()
@@ -32,6 +36,7 @@ def create_question_endpoint():
         }), 400
 
     required_fields = [
+        'subject_id',
         'question_text',
         'question_type',
         'marks',
@@ -54,6 +59,7 @@ def create_question_endpoint():
     try:
         question = create_question(
             user_id=int(current_user_id),
+            subject_id=data['subject_id'],
             question_text=data['question_text'],
             question_type=data['question_type'],
             marks=data['marks'],
@@ -66,6 +72,7 @@ def create_question_endpoint():
             'message': 'Question created successfully.',
             'data': {
                 'question_id': question.question_id,
+                'subject_id': question.subject_id,
                 'created_by': question.created_by,
                 'question_text': question.question_text,
                 'question_type': question.question_type,
@@ -100,7 +107,8 @@ def create_question_endpoint():
 @role_required('FACULTY')
 def get_my_questions_route():
     """
-    Retrieve questions created by the authenticated faculty member.
+    Retrieve active questions from subjects currently
+    assigned to the authenticated faculty member.
     """
 
     try:
@@ -114,6 +122,7 @@ def get_my_questions_route():
             'data': [
                 {
                     'question_id': question.question_id,
+                    'subject_id': question.subject_id,
                     'created_by': question.created_by,
                     'question_text': question.question_text,
                     'question_type': question.question_type,
