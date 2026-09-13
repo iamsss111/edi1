@@ -104,3 +104,6 @@ def register_blueprints(app: Flask) -> None:
 
     from app.routes.faculty_exam_publish_routes import faculty_exam_publish_bp
     app.register_blueprint(faculty_exam_publish_bp, url_prefix='/api/v1')
+
+    from app.routes.admin_routes import admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/api/v1')
