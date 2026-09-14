@@ -14,6 +14,13 @@ from app.services.admin_service import (
     assign_subject_to_faculty,
     get_faculty_subjects,
     deactivate_faculty_subject,
+    get_all_users,
+    get_user_by_id,
+    create_user,
+    update_user,
+    set_user_status,
+    change_user_role,
+    reset_user_password,
 )
 from app.utils.rbac import role_required
 
@@ -257,4 +264,295 @@ def deactivate_faculty_subject_endpoint(faculty_subject_id):
         return jsonify({
             'success': False,
             'message': 'Failed to deactivate Faculty subject assignment.',
+        }), 500
+
+
+@admin_bp.route('/admin/users', methods=['GET'])
+@role_required('ADMIN')
+def get_all_users_endpoint():
+
+    try:
+        users = get_all_users()
+
+        return jsonify({
+            'success': True,
+            'message': 'Users retrieved successfully.',
+            'data': [
+                {
+                    'user_id': user.user_id,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'email': user.email,
+                    'phone': user.phone,
+                    'role': user.role.role_name,
+                    'role_id': user.role_id,
+                    'is_active': user.is_active,
+                    'created_at': (
+                        user.created_at.isoformat()
+                        if user.created_at
+                        else None
+                    ),
+                    'updated_at': (
+                        user.updated_at.isoformat()
+                        if user.updated_at
+                        else None
+                    ),
+                }
+                for user in users
+            ],
+        }), 200
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to retrieve users.',
+        }), 500
+
+
+@admin_bp.route('/admin/users/<int:user_id>', methods=['GET'])
+@role_required('ADMIN')
+def get_user_endpoint(user_id):
+
+    try:
+        user = get_user_by_id(user_id)
+
+        return jsonify({
+            'success': True,
+            'message': 'User retrieved successfully.',
+            'data': {
+                'user_id': user.user_id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'phone': user.phone,
+                'role': user.role.role_name,
+                'role_id': user.role_id,
+                'is_active': user.is_active,
+                'created_at': (
+                    user.created_at.isoformat()
+                    if user.created_at
+                    else None
+                ),
+                'updated_at': (
+                    user.updated_at.isoformat()
+                    if user.updated_at
+                    else None
+                ),
+            },
+        }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to retrieve user.',
+        }), 500
+
+
+@admin_bp.route('/admin/users', methods=['POST'])
+@role_required('ADMIN')
+def create_user_endpoint():
+
+    try:
+        data = request.get_json() or {}
+
+        user = create_user(
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            email=data.get('email'),
+            password=data.get('password'),
+            role_name=data.get('role'),
+            phone=data.get('phone'),
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'User created successfully.',
+            'data': {
+                'user_id': user.user_id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'phone': user.phone,
+                'role': user.role.role_name,
+                'role_id': user.role_id,
+                'is_active': user.is_active,
+            },
+        }), 201
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to create user.',
+        }), 500
+
+
+@admin_bp.route('/admin/users/<int:user_id>', methods=['PUT'])
+@role_required('ADMIN')
+def update_user_endpoint(user_id):
+
+    try:
+        data = request.get_json() or {}
+
+        user = update_user(
+            user_id=user_id,
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            email=data.get('email'),
+            phone=data.get('phone'),
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'User updated successfully.',
+            'data': {
+                'user_id': user.user_id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'phone': user.phone,
+                'role': user.role.role_name,
+                'role_id': user.role_id,
+                'is_active': user.is_active,
+            },
+        }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update user.',
+        }), 500
+
+
+@admin_bp.route(
+    '/admin/users/<int:user_id>/status',
+    methods=['PATCH']
+)
+@role_required('ADMIN')
+def set_user_status_endpoint(user_id):
+
+    try:
+        data = request.get_json() or {}
+
+        if 'is_active' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'is_active is required.',
+            }), 400
+
+        user = set_user_status(
+            user_id=user_id,
+            is_active=data.get('is_active'),
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'User status updated successfully.',
+            'data': {
+                'user_id': user.user_id,
+                'is_active': user.is_active,
+            },
+        }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update user status.',
+        }), 500
+
+
+@admin_bp.route(
+    '/admin/users/<int:user_id>/role',
+    methods=['PATCH']
+)
+@role_required('ADMIN')
+def change_user_role_endpoint(user_id):
+
+    try:
+        data = request.get_json() or {}
+
+        user = change_user_role(
+            user_id=user_id,
+            role_name=data.get('role'),
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'User role updated successfully.',
+            'data': {
+                'user_id': user.user_id,
+                'role': user.role.role_name,
+                'role_id': user.role_id,
+            },
+        }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update user role.',
+        }), 500
+
+
+@admin_bp.route(
+    '/admin/users/<int:user_id>/password',
+    methods=['PATCH']
+)
+@role_required('ADMIN')
+def reset_user_password_endpoint(user_id):
+
+    try:
+        data = request.get_json() or {}
+
+        user = reset_user_password(
+            user_id=user_id,
+            new_password=data.get('new_password'),
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'User password updated successfully.',
+            'data': {
+                'user_id': user.user_id,
+            },
+        }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 400
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update user password.',
         }), 500

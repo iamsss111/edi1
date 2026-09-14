@@ -6,7 +6,8 @@ subjects to Faculty.
 """
 
 from app.extensions.database import db
-from app.models import Faculty, FacultySubject, Subject
+from app.models import Faculty, FacultySubject, Subject, User, Role
+from app.utils.password import hash_password
 
 
 def create_subject(
@@ -217,6 +218,320 @@ def deactivate_faculty_subject(faculty_subject_id):
     try:
         db.session.commit()
         return assignment
+    except Exception:
+        db.session.rollback()
+        raise
+
+def get_all_users():
+    """
+    Return all platform users for Admin management.
+    """
+    return (
+        User.query
+        .join(Role)
+        .order_by(User.user_id.asc())
+        .all()
+    )
+
+
+def get_user_by_id(user_id):
+    """
+    Return a single user by ID.
+    """
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid user_id.")
+
+    user = User.query.filter_by(user_id=user_id).first()
+
+    if user is None:
+        raise ValueError("User not found.")
+
+    return user
+
+
+def create_user(
+    first_name,
+    last_name,
+    email,
+    password,
+    role_name,
+    phone=None,
+):
+    """
+    Admin creates a platform user.
+    """
+
+    if not first_name or not str(first_name).strip():
+        raise ValueError("First name is required.")
+
+    if not last_name or not str(last_name).strip():
+        raise ValueError("Last name is required.")
+
+    if not email or not str(email).strip():
+        raise ValueError("Email is required.")
+
+    if not password:
+        raise ValueError("Password is required.")
+
+    if not role_name or not str(role_name).strip():
+        raise ValueError("Role is required.")
+
+    first_name = str(first_name).strip()
+    last_name = str(last_name).strip()
+    email = str(email).strip().lower()
+    role_name = str(role_name).strip().upper()
+
+    allowed_roles = {"ADMIN", "FACULTY", "STUDENT"}
+
+    if role_name not in allowed_roles:
+        raise ValueError(
+            "Role must be ADMIN, FACULTY, or STUDENT."
+        )
+
+    existing_email = User.query.filter_by(email=email).first()
+
+    if existing_email is not None:
+        raise ValueError(
+            "A user with this email already exists."
+        )
+
+    if phone is not None:
+        phone = str(phone).strip()
+
+        if not phone:
+            phone = None
+
+        if phone is not None:
+            existing_phone = User.query.filter_by(
+                phone=phone
+            ).first()
+
+            if existing_phone is not None:
+                raise ValueError(
+                    "A user with this phone number already exists."
+                )
+
+    role = Role.query.filter_by(role_name=role_name).first()
+
+    if role is None:
+        raise ValueError("Role not found.")
+
+    user = User(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        phone=phone,
+        password_hash=hash_password(password),
+        role_id=role.role_id,
+        is_active=True,
+    )
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def update_user(
+    user_id,
+    first_name=None,
+    last_name=None,
+    email=None,
+    phone=None,
+):
+    """
+    Admin updates basic user information.
+    """
+
+    user = get_user_by_id(user_id)
+
+    if first_name is not None:
+        first_name = str(first_name).strip()
+
+        if not first_name:
+            raise ValueError("First name cannot be empty.")
+
+        user.first_name = first_name
+
+    if last_name is not None:
+        last_name = str(last_name).strip()
+
+        if not last_name:
+            raise ValueError("Last name cannot be empty.")
+
+        user.last_name = last_name
+
+    if email is not None:
+        email = str(email).strip().lower()
+
+        if not email:
+            raise ValueError("Email cannot be empty.")
+
+        existing = (
+            User.query
+            .filter(
+                User.email == email,
+                User.user_id != user.user_id,
+            )
+            .first()
+        )
+
+        if existing is not None:
+            raise ValueError(
+                "A user with this email already exists."
+            )
+
+        user.email = email
+
+    if phone is not None:
+        phone = str(phone).strip()
+
+        if not phone:
+            phone = None
+
+        if phone is not None:
+            existing = (
+                User.query
+                .filter(
+                    User.phone == phone,
+                    User.user_id != user.user_id,
+                )
+                .first()
+            )
+
+            if existing is not None:
+                raise ValueError(
+                    "A user with this phone number already exists."
+                )
+
+        user.phone = phone
+
+    try:
+        db.session.commit()
+        return user
+
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def set_user_status(user_id, is_active):
+    """
+    Activate or deactivate a user.
+
+    An Admin cannot deactivate the last active Admin.
+    """
+
+    user = get_user_by_id(user_id)
+
+    if not isinstance(is_active, bool):
+        raise ValueError("is_active must be true or false.")
+
+    if user.is_active == is_active:
+        return user
+
+    if not is_active and user.role.role_name == "ADMIN":
+        active_admin_count = (
+            User.query
+            .join(Role)
+            .filter(
+                Role.role_name == "ADMIN",
+                User.is_active.is_(True),
+            )
+            .count()
+        )
+
+        if active_admin_count <= 1:
+            raise ValueError(
+                "Cannot deactivate the last active Admin."
+            )
+
+    user.is_active = is_active
+
+    try:
+        db.session.commit()
+        return user
+
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def change_user_role(user_id, role_name):
+    """
+    Change a user's platform role.
+    """
+
+    user = get_user_by_id(user_id)
+
+    role_name = str(role_name).strip().upper()
+
+    allowed_roles = {"ADMIN", "FACULTY", "STUDENT"}
+
+    if role_name not in allowed_roles:
+        raise ValueError(
+            "Role must be ADMIN, FACULTY, or STUDENT."
+        )
+
+    role = Role.query.filter_by(role_name=role_name).first()
+
+    if role is None:
+        raise ValueError("Role not found.")
+
+    if user.role.role_name == "ADMIN" and role_name != "ADMIN":
+        active_admin_count = (
+            User.query
+            .join(Role)
+            .filter(
+                Role.role_name == "ADMIN",
+                User.is_active.is_(True),
+            )
+            .count()
+        )
+
+        if user.is_active and active_admin_count <= 1:
+            raise ValueError(
+                "Cannot remove the role from the last active Admin."
+            )
+
+    user.role_id = role.role_id
+
+    try:
+        db.session.commit()
+        return user
+
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def reset_user_password(user_id, new_password):
+    """
+    Admin resets a user's password.
+    """
+
+    user = get_user_by_id(user_id)
+
+    if not new_password:
+        raise ValueError("New password is required.")
+
+    if len(str(new_password)) < 8:
+        raise ValueError(
+            "Password must be at least 8 characters long."
+        )
+
+    user.password_hash = hash_password(str(new_password))
+
+    try:
+        db.session.commit()
+        return user
+
     except Exception:
         db.session.rollback()
         raise
