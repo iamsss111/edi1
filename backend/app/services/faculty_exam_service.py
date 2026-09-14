@@ -195,7 +195,7 @@ def get_exam_results(user_id: int, exam_id: int):
             == CandidateRegistration.registration_id
         )
         .filter(
-            ExamAttempt.exam_id == exam_id
+            CandidateRegistration.exam_id == exam_id
         )
         .all()
     )
