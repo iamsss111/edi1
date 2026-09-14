@@ -119,4 +119,4 @@ def get_exam_schedule_route(exam_id):
         return jsonify({
             'success': False,
             'message': 'Failed to retrieve exam schedule.'
-        }), 500   
+        }), 500
