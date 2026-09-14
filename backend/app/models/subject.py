@@ -100,6 +100,19 @@ class Subject(db.Model):
     lazy=True
     )
 
+    # Subject 1 ───── M FacultySubject
+    faculty_assignments = db.relationship(
+        'FacultySubject',
+        back_populates='subject',
+        lazy=True
+    )
+
+    questions = db.relationship(
+        'Question',
+        back_populates='subject',
+        lazy=True
+    )
+
     __table_args__ = (
         db.CheckConstraint(
             "TRIM(SubjectCode) <> ''",

@@ -1,67 +1,68 @@
-"""
-Faculty question service.
-
-Contains business logic for faculty question management.
-"""
-
 from app.extensions.database import db
-from app.models import Faculty, Question
+from app.models import Faculty, FacultySubject, Question, Subject
 
 
 ALLOWED_QUESTION_TYPES = {
     'MCQ',
     'TrueFalse',
     'ShortAnswer',
-    'Descriptive',
+    'Descriptive'
 }
 
 ALLOWED_DIFFICULTIES = {
     'Easy',
     'Medium',
-    'Hard',
+    'Hard'
 }
 
 
 def create_question(
     user_id: int,
+    subject_id: int,
     question_text: str,
     question_type: str,
     marks,
     difficulty: str,
-    explanation: str | None,
+    explanation: str | None
 ) -> Question:
-    """
-    Create a question for the authenticated faculty member.
-
-    Args:
-        user_id: ID of the authenticated faculty user.
-        question_text: Question content.
-        question_type: Type of question.
-        marks: Marks assigned to the question.
-        difficulty: Question difficulty.
-        explanation: Optional explanation.
-
-    Returns:
-        Newly created Question instance.
-
-    Raises:
-        ValueError: If validation fails or faculty profile is missing.
-    """
 
     faculty = Faculty.query.filter_by(user_id=user_id).first()
 
     if faculty is None:
         raise ValueError("Faculty profile not found.")
 
+    try:
+        subject_id = int(subject_id)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid subject_id.")
+
+    subject = Subject.query.filter_by(subject_id=subject_id).first()
+
+    if subject is None:
+        raise ValueError("Subject not found.")
+
+    assignment = FacultySubject.query.filter_by(
+        faculty_id=faculty.faculty_id,
+        subject_id=subject_id,
+        is_active=True
+    ).first()
+
+    if assignment is None:
+        raise ValueError(
+            "You can only create questions for subjects currently assigned to you."
+        )
+
     if not question_text or not question_text.strip():
         raise ValueError("Question text is required.")
+
+    question_text = question_text.strip()
 
     question_type = str(question_type).strip()
 
     if question_type not in ALLOWED_QUESTION_TYPES:
         raise ValueError(
-            "Question type must be one of: "
-            "MCQ, TrueFalse, ShortAnswer, Descriptive."
+            f"Invalid question type. Allowed types: "
+            f"{', '.join(sorted(ALLOWED_QUESTION_TYPES))}"
         )
 
     try:
@@ -70,13 +71,14 @@ def create_question(
         raise ValueError("Marks must be a valid number.")
 
     if marks <= 0:
-        raise ValueError("Marks must be greater than zero.")
+        raise ValueError("Marks must be greater than 0.")
 
     difficulty = str(difficulty).strip()
 
     if difficulty not in ALLOWED_DIFFICULTIES:
         raise ValueError(
-            "Difficulty must be one of: Easy, Medium, Hard."
+            f"Invalid difficulty. Allowed values: "
+            f"{', '.join(sorted(ALLOWED_DIFFICULTIES))}"
         )
 
     if explanation is not None:
@@ -86,19 +88,19 @@ def create_question(
             explanation = None
 
     question = Question(
+        subject_id=subject_id,
         created_by=user_id,
-        question_text=question_text.strip(),
+        question_text=question_text,
         question_type=question_type,
         marks=marks,
         difficulty=difficulty,
         explanation=explanation,
-        is_active=True,
+        is_active=True
     )
 
     try:
         db.session.add(question)
         db.session.commit()
-
         return question
 
     except Exception:
@@ -106,16 +108,29 @@ def create_question(
         raise
 
 
-def get_my_questions(user_id):
+def get_my_questions(user_id: int):
+
     faculty = Faculty.query.filter_by(user_id=user_id).first()
 
     if faculty is None:
         raise ValueError("Faculty profile not found.")
 
-    questions = Question.query.filter_by(
-        created_by=user_id
-    ).order_by(
-        Question.question_id.desc()
-    ).all()
+    active_subject_ids = (
+        db.select(FacultySubject.subject_id)
+        .where(
+            FacultySubject.faculty_id == faculty.faculty_id,
+            FacultySubject.is_active.is_(True)
+        )
+    )
+
+    questions = (
+        Question.query
+        .filter(
+            Question.subject_id.in_(active_subject_ids),
+            Question.is_active.is_(True)
+        )
+        .order_by(Question.question_id.desc())
+        .all()
+    )
 
     return questions

@@ -1,49 +1,71 @@
+"""
+Faculty exam routes.
+
+Provides endpoints for faculty exam management.
+"""
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
-from app.services.faculty_exam_service import (create_exam, get_my_exams, get_exam_details, get_exam_results)
+from app.services.faculty_exam_service import (
+    create_exam,
+    get_my_exams,
+    get_exam_details,
+    get_exam_results,
+)
 from app.utils.rbac import role_required
 
 
-faculty_exam_bp = Blueprint(
-    'faculty_exam',
-    __name__
-)
+faculty_exam_bp = Blueprint('faculty_exam', __name__)
 
 
-@faculty_exam_bp.route('/exams', methods=['POST'])
+@faculty_exam_bp.post('/exams')
 @role_required('FACULTY')
-def create_exam_route():
+def create_exam_endpoint():
+    """
+    Create an exam for a subject currently assigned
+    to the authenticated faculty member.
+    """
 
-    data = request.get_json() or {}
+    current_user_id = get_jwt_identity()
+
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'Request body must contain JSON data.'
+        }), 400
 
     required_fields = [
         'subject_id',
         'title',
         'duration_minutes',
         'total_marks',
-        'pass_marks'
+        'pass_marks',
     ]
 
-    for field in required_fields:
-        if field not in data:
-            return jsonify({
-                'success': False,
-                'message': f'{field} is required.'
-            }), 400
+    missing_fields = [
+        field
+        for field in required_fields
+        if field not in data
+    ]
+
+    if missing_fields:
+        return jsonify({
+            'success': False,
+            'message': 'Required fields are missing.',
+            'fields': missing_fields,
+        }), 400
 
     try:
-        user_id = int(get_jwt_identity())
-
         exam = create_exam(
-            user_id=user_id,
+            user_id=int(current_user_id),
             subject_id=data['subject_id'],
             title=data['title'],
-            description=data.get('description'),
             duration_minutes=data['duration_minutes'],
             total_marks=data['total_marks'],
             pass_marks=data['pass_marks'],
-            instructions=data.get('instructions')
         )
 
         return jsonify({
@@ -59,20 +81,32 @@ def create_exam_route():
                 'total_marks': float(exam.total_marks),
                 'pass_marks': float(exam.pass_marks),
                 'status': exam.status,
-                'instructions': exam.instructions
-            }
+                'instructions': exam.instructions,
+                'created_at': (
+                    exam.created_at.isoformat()
+                    if exam.created_at
+                    else None
+                ),
+                'updated_at': (
+                    exam.updated_at.isoformat()
+                    if exam.updated_at
+                    else None
+                ),
+            },
         }), 201
 
-    except ValueError as error:
+    except (TypeError, ValueError) as error:
         return jsonify({
             'success': False,
-            'message': str(error)
+            'message': str(error),
         }), 400
 
     except Exception:
         return jsonify({
             'success': False,
-            'message': 'Failed to create exam.'
+            'message': (
+                'An unexpected error occurred while creating the exam.'
+            ),
         }), 500
 
 
@@ -131,7 +165,7 @@ def get_my_exams_route():
         }), 500
 
 
-@faculty_exam_bp.route('/exams/<int:exam_id>', methods=['GET'])
+@faculty_exam_bp.get('/exams/<int:exam_id>')
 @role_required('FACULTY')
 def get_exam_details_route(exam_id):
     """
@@ -170,7 +204,7 @@ def get_exam_details_route(exam_id):
                     if exam.updated_at
                     else None
                 ),
-            }
+            },
         }), 200
 
     except ValueError as error:
@@ -186,15 +220,11 @@ def get_exam_details_route(exam_id):
         }), 500
 
 
-@faculty_exam_bp.route(
-    '/exams/<int:exam_id>/results',
-    methods=['GET']
-)
+@faculty_exam_bp.get('/exams/<int:exam_id>/results')
 @role_required('FACULTY')
 def get_exam_results_route(exam_id):
     """
-    Retrieve results of students who attempted
-    an exam created by the authenticated faculty member.
+    Retrieve results for an exam created by the authenticated faculty member.
     """
 
     try:
@@ -209,50 +239,28 @@ def get_exam_results_route(exam_id):
             'success': True,
             'message': 'Exam results retrieved successfully.',
             'data': {
-                'exam_id': exam.exam_id,
-                'title': exam.title,
-                'total_marks': float(exam.total_marks),
-                'pass_marks': float(exam.pass_marks),
+                'exam': {
+                    'exam_id': exam.exam_id,
+                    'subject_id': exam.subject_id,
+                    'title': exam.title,
+                    'status': exam.status,
+                },
                 'results': [
                     {
-                        'result_id': result.result_id,
-                        'attempt_id': result.attempt_id,
-                        'total_marks': float(result.total_marks),
-                        'obtained_marks': float(
-                            result.obtained_marks
-                        ),
-                        'percentage': float(result.percentage),
-                        'grade': result.grade,
-                        'result_status': result.result_status,
-                        'published_at': (
-                            result.published_at.isoformat()
-                            if result.published_at
-                            else None
-                        ),
+                        'result': result.result_id,
+                        'attempt_id': attempt.attempt_id,
+                        'registration_id': registration.registration_id,
                     }
-                    for result in results
-                ]
-            }
+                    for result, attempt, registration in results
+                ],
+            },
         }), 200
 
     except ValueError as error:
-        message = str(error)
-
-        if message == "Faculty profile not found.":
-            status_code = 403
-
-        elif message == (
-            "Exam not found or you do not have access to it."
-        ):
-            status_code = 404
-
-        else:
-            status_code = 400
-
         return jsonify({
             'success': False,
-            'message': message,
-        }), status_code
+            'message': str(error),
+        }), 400
 
     except Exception:
         return jsonify({

@@ -30,6 +30,18 @@ class Question(db.Model):
         nullable=False
     )
 
+    subject_id = db.Column(
+        'SubjectID',
+        BIGINT(unsigned=True),
+        db.ForeignKey(
+            'Subject.SubjectID',
+            name='fk_question_subject',
+            ondelete='RESTRICT',
+            onupdate='CASCADE'
+        ),
+        nullable=False
+    )
+
     question_text = db.Column(
         'QuestionText',
         db.Text,
@@ -94,6 +106,11 @@ class Question(db.Model):
         lazy=True
     )
 
+    subject = db.relationship(
+        'Subject',
+        back_populates='questions'
+    )
+
     __table_args__ = (
         db.CheckConstraint(
             "TRIM(QuestionText) <> ''",
@@ -133,6 +150,11 @@ class Question(db.Model):
         db.Index(
             'idx_question_active',
             'IsActive'
+        ),
+
+        db.Index(
+            'idx_question_subject',
+            'SubjectID'
         ),
     )
 
