@@ -106,3 +106,38 @@ def create_exam_schedule(
     except Exception:
         db.session.rollback()
         raise
+
+
+def get_exam_schedule(user_id, exam_id):
+    """
+    Retrieve the latest schedule for an exam owned by the
+    authenticated faculty member.
+    """
+
+    # Verify faculty
+    faculty = Faculty.query.filter_by(user_id=user_id).first()
+
+    if faculty is None:
+        raise ValueError("Faculty profile not found.")
+
+    # Verify exam
+    exam = Exam.query.filter_by(exam_id=exam_id).first()
+
+    if exam is None:
+        raise ValueError("Exam not found.")
+
+    # Faculty can only view schedules for own exams
+    if exam.created_by != user_id:
+        raise ValueError(
+            "You can only view schedules for your own exams."
+        )
+
+    # Retrieve the latest schedule for this exam
+    schedule = (
+        ExamSchedule.query
+        .filter_by(exam_id=exam_id)
+        .order_by(ExamSchedule.schedule_id.desc())
+        .first()
+    )
+
+    return schedule

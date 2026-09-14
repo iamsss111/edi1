@@ -63,7 +63,7 @@
       <header class="top-navbar">
         <div class="navbar-search">
           <i class="bi bi-search"></i>
-          <input type="text" placeholder="Search exams...">
+          <input type="text" id="examSearchInput" placeholder="Search exams...">
         </div>
         <div class="navbar-actions">
           <!-- Notification Bell Dropdown -->
@@ -141,21 +141,7 @@
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td><span class="font-monospace">EXAM-DBMS-MID</span></td>
-                  <td class="fw-semibold">DBMS Mid-Term Assessment</td>
-                  <td>Database Management Systems</td>
-                  <td>OBJECTIVE</td>
-                  <td>60 min</td>
-                  <td>100.00</td>
-                  <td><span class="status-badge badge-active">ACTIVE</span></td>
-                  <td>
-                    <a href="/evaluation/pending.html" class="btn btn-sm btn-outline-info me-1"><i class="bi bi-eye"></i></a>
-                    <a href="/exams/create.html" class="btn btn-sm btn-outline-light"><i class="bi bi-pencil"></i></a>
-                  </td>
-                </tr>
-              </tbody>
+              <tbody id="examTableBody">
             </table>
           </div>
         </div>
@@ -164,6 +150,161 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+<script>
+  let facultyExams = [];
+
+  const examTableBody = document.getElementById('examTableBody');
+  const examSearchInput = document.getElementById('examSearchInput');
+
+  function escapeHtml(value) {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getStatusClass(status) {
+    switch (status) {
+      case 'Published':
+        return 'badge-active';
+
+      case 'Completed':
+        return 'badge-completed';
+
+      case 'Cancelled':
+        return 'badge-cancelled';
+
+      case 'Draft':
+      default:
+        return 'badge-draft';
+    }
+  }
+
+  function renderExams(exams) {
+    if (!exams.length) {
+      examTableBody.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">
+            No exams found.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    examTableBody.innerHTML = exams.map(exam => `
+      <tr>
+        <td>
+          <span class="font-monospace">
+            #${escapeHtml(exam.exam_id)}
+          </span>
+        </td>
+
+        <td class="fw-semibold">
+          ${escapeHtml(exam.title)}
+        </td>
+
+        <td>
+          Subject #${escapeHtml(exam.subject_id)}
+        </td>
+
+        <td>
+          OBJECTIVE
+        </td>
+
+        <td>
+          ${escapeHtml(exam.duration_minutes)} min
+        </td>
+
+        <td>
+          ${escapeHtml(exam.total_marks)}
+        </td>
+
+        <td>
+          <span class="status-badge ${getStatusClass(exam.status)}">
+            ${escapeHtml(exam.status)}
+          </span>
+        </td>
+
+        <td>
+          <a
+            href="/exams/detail.html?exam_id=${encodeURIComponent(exam.exam_id)}"
+            class="btn btn-sm btn-outline-info"
+            title="View exam"
+          >
+            <i class="bi bi-eye"></i>
+          </a>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadFacultyExams() {
+    examTableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center text-muted py-4">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+          Loading exams...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const response = await apiRequest('/exams', {
+        method: 'GET'
+      });
+
+      if (!response || !response.success || !Array.isArray(response.data)) {
+        throw new Error('Invalid exam data received from the server.');
+      }
+
+      facultyExams = response.data;
+
+      renderExams(facultyExams);
+
+    } catch (error) {
+      console.error('Failed to load faculty exams:', error);
+
+      examTableBody.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center text-danger py-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            ${escapeHtml(error.message || 'Failed to load exams.')}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  examSearchInput.addEventListener('input', function () {
+    const searchTerm = this.value.trim().toLowerCase();
+
+    if (!searchTerm) {
+      renderExams(facultyExams);
+      return;
+    }
+
+    const filteredExams = facultyExams.filter(exam => {
+      return (
+        String(exam.exam_id).toLowerCase().includes(searchTerm) ||
+        String(exam.title || '').toLowerCase().includes(searchTerm) ||
+        String(exam.subject_id || '').toLowerCase().includes(searchTerm) ||
+        String(exam.status || '').toLowerCase().includes(searchTerm)
+      );
+    });
+
+    renderExams(filteredExams);
+  });
+
+  document.addEventListener('DOMContentLoaded', loadFacultyExams);
+</script>
 </body>
 </html>
