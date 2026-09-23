@@ -23,6 +23,14 @@ ALLOWED_EVENTS = {
     'PAGE_HIDDEN',
 }
 
+VIOLATION_EVENTS = {
+    'TAB_SWITCH',
+    'WINDOW_BLUR',
+    'FULLSCREEN_EXIT',
+}
+
+MAX_INTEGRITY_VIOLATIONS = 3
+
 
 def record_integrity_event(
     user_id: int,
@@ -30,7 +38,7 @@ def record_integrity_event(
     event_type: str,
     details: dict | None = None,
     ip_address: str | None = None,
-) -> AuditLog:
+) -> tuple[AuditLog, int, bool]:
 
     # ------------------------------------------------------------
     # 1. Validate event type
@@ -108,17 +116,38 @@ def record_integrity_event(
     )
 
     # ------------------------------------------------------------
-    # 7. Save audit event
+    # 7. Save audit event and calculate violation count
     # ------------------------------------------------------------
 
     try:
-
         db.session.add(audit_log)
+        db.session.flush()
+
+        violation_count = 0
+
+        if event_type in VIOLATION_EVENTS:
+            violation_count = AuditLog.query.filter(
+                AuditLog.entity_type == 'ExamAttempt',
+                AuditLog.entity_id == attempt_id,
+                AuditLog.action.in_(VIOLATION_EVENTS),
+            ).count()
+
+        auto_submit_triggered = (
+            violation_count >= MAX_INTEGRITY_VIOLATIONS
+        )
+
+        if auto_submit_triggered:
+            attempt.status = 'AutoSubmitted'
+            attempt.submitted_at = db.func.current_timestamp()
+
         db.session.commit()
 
-        return audit_log
+        return (
+            audit_log,
+            violation_count,
+            auto_submit_triggered,
+        )
 
     except Exception:
-
         db.session.rollback()
         raise

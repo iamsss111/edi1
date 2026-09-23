@@ -362,12 +362,7 @@ async function handleAnswerChange(questionId, optionId) {
     console.log('Answer autosaved:', response);
   } catch (error) {
     console.error('Answer autosave failed:', error);
-
-    showToast(
-      'Unable to save your answer. Please try again.',
-      'danger'
-    );
-  }
+}
 }
 
 

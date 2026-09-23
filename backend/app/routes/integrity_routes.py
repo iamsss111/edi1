@@ -51,7 +51,11 @@ def record_integrity_event_endpoint(attempt_id: int):
 
     try:
 
-        audit_log = record_integrity_event(
+        (
+            audit_log,
+            violation_count,
+            auto_submit_triggered,
+        ) = record_integrity_event(
             user_id=int(current_user_id),
             attempt_id=attempt_id,
             event_type=event_type,
@@ -59,9 +63,16 @@ def record_integrity_event_endpoint(attempt_id: int):
             ip_address=request.remote_addr,
         )
 
+        message = (
+            'Maximum integrity violations reached. '
+            'Examination auto-submitted.'
+            if auto_submit_triggered
+            else 'Browser integrity event recorded successfully.'
+        )
+
         return jsonify({
             'success': True,
-            'message': 'Browser integrity event recorded successfully.',
+            'message': message,
             'data': {
                 'audit_id': audit_log.audit_id,
                 'attempt_id': attempt_id,
@@ -71,6 +82,8 @@ def record_integrity_event_endpoint(attempt_id: int):
                     if audit_log.created_at
                     else None
                 ),
+                'violation_count': violation_count,
+                'auto_submit_triggered': auto_submit_triggered,
             },
         }), 201
 
