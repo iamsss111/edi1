@@ -32,7 +32,9 @@ def create_exam(
     title: str,
     duration_minutes,
     total_marks,
-    pass_marks
+    pass_marks,
+    adaptive_enabled=False,
+    initial_difficulty='Medium',
 ) -> Exam:
     """
     Create an exam for a subject currently assigned
@@ -101,6 +103,22 @@ def create_exam(
             "Pass marks cannot be greater than total marks."
         )
 
+    if not isinstance(adaptive_enabled, bool):
+        raise ValueError(
+            "adaptive_enabled must be a boolean."
+        )
+
+    allowed_difficulties = {
+        'Easy',
+        'Medium',
+        'Hard'
+    }
+
+    if initial_difficulty not in allowed_difficulties:
+        raise ValueError(
+            "initial_difficulty must be Easy, Medium, or Hard."
+        )
+
     exam = Exam(
         subject_id=subject_id,
         created_by=user_id,
@@ -108,6 +126,8 @@ def create_exam(
         duration_minutes=duration_minutes,
         total_marks=total_marks,
         pass_marks=pass_marks,
+        adaptive_enabled=adaptive_enabled,
+        initial_difficulty=initial_difficulty,
         status='Draft'
     )
 

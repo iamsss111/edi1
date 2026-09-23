@@ -83,6 +83,22 @@ class Exam(db.Model):
         db.Text
     )
 
+    adaptive_enabled = db.Column(
+        'AdaptiveEnabled',
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default='0'
+    )
+
+    initial_difficulty = db.Column(
+        'InitialDifficulty',
+        db.String(20),
+        nullable=False,
+        default='Medium',
+        server_default='Medium'
+    )
+
     created_at = db.Column(
         'CreatedAt',
         db.DateTime,
@@ -155,6 +171,11 @@ class Exam(db.Model):
         db.CheckConstraint(
             "Status IN ('Draft', 'Published', 'Completed', 'Cancelled')",
             name='chk_exam_status'
+        ),
+
+        db.CheckConstraint(
+            "InitialDifficulty IN ('Easy', 'Medium', 'Hard')",
+            name='chk_exam_initial_difficulty'
         ),
 
         db.Index(

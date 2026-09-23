@@ -8,6 +8,9 @@ from flask_jwt_extended import get_jwt_identity
 from app.services.question_delivery_service import (
     get_exam_questions
 )
+from app.services.adaptive_exam_service import (
+    get_next_question
+)
 from app.utils.rbac import role_required
 
 
@@ -61,5 +64,32 @@ def get_exam_questions_endpoint(exam_id: int):
             'message': (
                 'An unexpected error occurred while retrieving '
                 'examination questions.'
+            ),
+        }), 500
+
+
+@question_bp.get('/attempts/<int:attempt_id>/next-question')
+@role_required('STUDENT')
+def get_next_adaptive_question_endpoint(attempt_id: int):
+
+    current_user_id = get_jwt_identity()
+
+    try:
+        data = get_next_question(
+            user_id=int(current_user_id),
+            attempt_id=attempt_id
+        )
+
+        return jsonify({
+            'success': True,
+            'data': data,
+        }), 200
+
+    except Exception:
+        return jsonify({
+            'success': False,
+            'message': (
+                'An unexpected error occurred while retrieving '
+                'the next adaptive question.'
             ),
         }), 500

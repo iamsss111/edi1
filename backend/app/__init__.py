@@ -75,6 +75,10 @@ def create_app(config_name: str = 'development') -> Flask:
     
     # Register blueprints
     register_blueprints(app)
+
+    if config_name == 'development':
+        from app.swagger_ui import register_swagger
+        register_swagger(app)
     
     return app
 

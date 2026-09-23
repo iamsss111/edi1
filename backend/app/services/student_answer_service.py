@@ -153,6 +153,11 @@ def save_answer(
         db.session.add(answer)
 
     try:
+        # For adaptive exams, clear the currently displayed question
+        # after the answer has been successfully saved.
+        if exam.adaptive_enabled:
+            attempt.current_adaptive_exam_question_id = None
+
         db.session.commit()
         return answer
 

@@ -1,0 +1,614 @@
+openapi: 3.0.3
+info:
+  title: Online Examination Platform API
+  version: 1.0.0
+  description: Documentation for the existing Online Examination Platform API.
+servers:
+  - url: http://127.0.0.1:5000
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Student
+  - name: Faculty
+  - name: Admin
+security:
+  - bearerAuth: []
+paths:
+  /api/v1/health:
+    get:
+      tags: [Health]
+      summary: Check API availability
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+  /api/v1/db-health:
+    get:
+      tags: [Health]
+      summary: Check database connectivity
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '500': { $ref: '#/components/responses/Error' }
+  /api/v1/register:
+    post:
+      tags: [Authentication]
+      summary: Register a student account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/Success' }
+        '400': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+  /api/v1/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate and receive a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/LoginSuccess' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/me:
+    get:
+      tags: [Authentication]
+      summary: Get the authenticated user identity
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/student-test:
+    get:
+      tags: [Authentication]
+      summary: Verify student role access
+      x-required-role: STUDENT
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /api/v1/exams/{exam_id}/start:
+    post:
+      tags: [Student]
+      summary: Start an examination
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams/{exam_id}/questions:
+    get:
+      tags: [Student]
+      summary: Retrieve questions for an examination
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+    post:
+      tags: [Faculty]
+      summary: Add a question to an exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/next-question:
+    get:
+      tags: [Student]
+      summary: Retrieve the next adaptive question
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '500': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/answers:
+    post:
+      tags: [Student]
+      summary: Submit an answer
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnswerRequest' }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' } }
+    get:
+      tags: [Student]
+      summary: Retrieve submitted answers
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/submit:
+    post:
+      tags: [Student]
+      summary: Submit an examination attempt
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/evaluate:
+    post:
+      tags: [Student]
+      summary: Evaluate an examination attempt
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/result:
+    post:
+      tags: [Student]
+      summary: Create an attempt result
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' } }
+    get:
+      tags: [Student]
+      summary: Retrieve an attempt result
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/attempts/{attempt_id}/integrity-events:
+    post:
+      tags: [Student]
+      summary: Record an integrity event
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/subjects:
+    get:
+      tags: [Faculty]
+      summary: Retrieve faculty subjects
+      x-required-role: FACULTY
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/questions:
+    get:
+      tags: [Faculty]
+      summary: Retrieve faculty questions
+      x-required-role: FACULTY
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+    post:
+      tags: [Faculty]
+      summary: Create a question
+      x-required-role: FACULTY
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/questions/{question_id}/options:
+    post:
+      tags: [Faculty]
+      summary: Add an option to a question
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams:
+    get:
+      tags: [Faculty]
+      summary: Retrieve faculty exams
+      x-required-role: FACULTY
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+    post:
+      tags: [Faculty]
+      summary: Create an exam
+      x-required-role: FACULTY
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/ExamRequest' } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams/{exam_id}:
+    get:
+      tags: [Faculty]
+      summary: Retrieve exam details
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams/{exam_id}/schedule:
+    get:
+      tags: [Faculty]
+      summary: Retrieve an exam schedule
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+    post:
+      tags: [Faculty]
+      summary: Schedule an exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams/{exam_id}/publish:
+    post:
+      tags: [Faculty]
+      summary: Publish an exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/exams/{exam_id}/results:
+    get:
+      tags: [Faculty]
+      summary: Retrieve results for a faculty exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/exams:
+    get:
+      tags: [Admin]
+      summary: Retrieve all exams
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/exams/{exam_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve an exam
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/subjects:
+    get:
+      tags: [Admin]
+      summary: Retrieve all subjects
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    post:
+      tags: [Admin]
+      summary: Create a subject
+      x-required-role: ADMIN
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/subjects/{subject_id}:
+    put:
+      tags: [Admin]
+      summary: Update a subject
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/SubjectId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/subjects/{subject_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Change subject status
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/SubjectId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/faculty:
+    get:
+      tags: [Admin]
+      summary: Retrieve faculty
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    post:
+      tags: [Admin]
+      summary: Create faculty
+      x-required-role: ADMIN
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' } }
+  /api/v1/admin/faculty/{faculty_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve faculty member
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultyId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    put:
+      tags: [Admin]
+      summary: Update faculty member
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultyId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/faculty/{faculty_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Change faculty status
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultyId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/faculty/{faculty_id}/subjects:
+    get:
+      tags: [Admin]
+      summary: Retrieve faculty subject assignments
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultyId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    post:
+      tags: [Admin]
+      summary: Assign a subject to faculty
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultyId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '201': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/faculty-subjects/{faculty_subject_id}/deactivate:
+    patch:
+      tags: [Admin]
+      summary: Deactivate faculty subject assignment
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/FacultySubjectId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/users:
+    get:
+      tags: [Admin]
+      summary: Retrieve users
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    post:
+      tags: [Admin]
+      summary: Create a user
+      x-required-role: ADMIN
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '201': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/users/{user_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve a user
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    put:
+      tags: [Admin]
+      summary: Update a user
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/users/{user_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Change user status
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/users/{user_id}/role:
+    patch:
+      tags: [Admin]
+      summary: Change user role
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/users/{user_id}/password:
+    patch:
+      tags: [Admin]
+      summary: Reset a user password
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/students:
+    get:
+      tags: [Admin]
+      summary: Retrieve students
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    post:
+      tags: [Admin]
+      summary: Create a student
+      x-required-role: ADMIN
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '201': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/students/{student_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve a student
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+    put:
+      tags: [Admin]
+      summary: Update a student
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/students/{student_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Change student status
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/questions:
+    get:
+      tags: [Admin]
+      summary: Retrieve questions
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/questions/{question_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve a question
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/questions/{question_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Change question status
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/registrations:
+    get:
+      tags: [Admin]
+      summary: Retrieve registrations
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/exams/{exam_id}/registrations:
+    get:
+      tags: [Admin]
+      summary: Retrieve registrations for an exam
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/registrations/{registration_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve a registration
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/RegistrationId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/attempts:
+    get:
+      tags: [Admin]
+      summary: Retrieve attempts
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/exams/{exam_id}/attempts:
+    get:
+      tags: [Admin]
+      summary: Retrieve attempts for an exam
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/attempts/{attempt_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve an attempt
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/attempts/{attempt_id}/integrity-events:
+    get:
+      tags: [Admin]
+      summary: Retrieve attempt integrity events
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/results:
+    get:
+      tags: [Admin]
+      summary: Retrieve results
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/exams/{exam_id}/results:
+    get:
+      tags: [Admin]
+      summary: Retrieve results for an exam
+      x-required-role: ADMIN
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/results/{result_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve a result
+      x-required-role: ADMIN
+      parameters: [{ name: result_id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/dashboard/statistics:
+    get:
+      tags: [Admin]
+      summary: Retrieve dashboard statistics
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/audit-logs:
+    get:
+      tags: [Admin]
+      summary: Retrieve audit logs
+      x-required-role: ADMIN
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+  /api/v1/admin/audit-logs/{audit_id}:
+    get:
+      tags: [Admin]
+      summary: Retrieve an audit log
+      x-required-role: ADMIN
+      parameters: [{ name: audit_id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses: { '200': { $ref: '#/components/responses/Success' } }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ExamId: { name: exam_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    AttemptId: { name: attempt_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    QuestionId: { name: question_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    SubjectId: { name: subject_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    FacultyId: { name: faculty_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    FacultySubjectId: { name: faculty_subject_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    UserId: { name: user_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    StudentId: { name: student_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    RegistrationId: { name: registration_id, in: path, required: true, schema: { type: integer, format: int64 } }
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [first_name, last_name, email, password]
+      properties:
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        phone: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    ExamRequest:
+      type: object
+      required: [subject_id, title, duration_minutes, total_marks, pass_marks]
+      properties:
+        subject_id: { type: integer }
+        title: { type: string }
+        duration_minutes: { type: integer }
+        total_marks: { type: number }
+        pass_marks: { type: number }
+        adaptive_enabled: { type: boolean, default: false }
+        initial_difficulty: { type: string, enum: [Easy, Medium, Hard], default: Medium }
+    AnswerRequest:
+      type: object
+      additionalProperties: true
+    ApiResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: { nullable: true }
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string }
+  responses:
+    Success:
+      description: Successful API response
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } }
+    LoginSuccess:
+      description: Successful login response containing a JWT
+      content:
+        application/json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ApiResponse' }
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      access_token: { type: string }
+                      token_type: { type: string, example: Bearer }
+    Error:
+      description: Error response
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } }

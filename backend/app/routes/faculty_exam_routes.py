@@ -66,6 +66,14 @@ def create_exam_endpoint():
             duration_minutes=data['duration_minutes'],
             total_marks=data['total_marks'],
             pass_marks=data['pass_marks'],
+            adaptive_enabled=data.get(
+                'adaptive_enabled',
+                False
+            ),
+            initial_difficulty=data.get(
+                'initial_difficulty',
+                'Medium'
+            ),
         )
 
         return jsonify({
@@ -80,6 +88,8 @@ def create_exam_endpoint():
                 'duration_minutes': exam.duration_minutes,
                 'total_marks': float(exam.total_marks),
                 'pass_marks': float(exam.pass_marks),
+                'adaptive_enabled': exam.adaptive_enabled,
+                'initial_difficulty': exam.initial_difficulty,
                 'status': exam.status,
                 'instructions': exam.instructions,
                 'created_at': (
@@ -135,6 +145,8 @@ def get_my_exams_route():
                     'duration_minutes': exam.duration_minutes,
                     'total_marks': float(exam.total_marks),
                     'pass_marks': float(exam.pass_marks),
+                    'adaptive_enabled': exam.adaptive_enabled,
+                    'initial_difficulty': exam.initial_difficulty,
                     'status': exam.status,
                     'instructions': exam.instructions,
                     'created_at': (
@@ -192,6 +204,8 @@ def get_exam_details_route(exam_id):
                 'duration_minutes': exam.duration_minutes,
                 'total_marks': float(exam.total_marks),
                 'pass_marks': float(exam.pass_marks),
+                'adaptive_enabled': exam.adaptive_enabled,
+                'initial_difficulty': exam.initial_difficulty,
                 'status': exam.status,
                 'instructions': exam.instructions,
                 'created_at': (

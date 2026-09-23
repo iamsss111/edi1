@@ -60,6 +60,18 @@ class ExamAttempt(db.Model):
         db.Numeric(8, 2)
     )
 
+    current_adaptive_exam_question_id = db.Column(
+        'CurrentAdaptiveExamQuestionID',
+        BIGINT(unsigned=True),
+        db.ForeignKey(
+            'ExamQuestion.ExamQuestionID',
+            name='fk_attempt_current_adaptive_question',
+            ondelete='SET NULL',
+            onupdate='CASCADE'
+        ),
+        nullable=True
+    )
+
     # CandidateRegistration 1 ───── M ExamAttempt
     registration = db.relationship(
         'CandidateRegistration',
