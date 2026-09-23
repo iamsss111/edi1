@@ -54,6 +54,7 @@ def start_exam_endpoint(exam_id: int):
                     if attempt.started_at
                     else None
                 ),
+                'adaptive_enabled': attempt.registration.exam.adaptive_enabled,
             },
         }), 200
 
