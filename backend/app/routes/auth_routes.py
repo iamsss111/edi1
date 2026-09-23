@@ -22,6 +22,52 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     """
     Register a new student account.
+
+    ---
+    tags:
+      - Authentication
+    summary: Register a new student
+    description: Creates a new student account. The role is automatically assigned as STUDENT.
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - first_name
+            - last_name
+            - email
+            - password
+          properties:
+            first_name:
+              type: string
+              example: Saniya
+            last_name:
+              type: string
+              example: Patil
+            email:
+              type: string
+              format: email
+              example: student@example.com
+            password:
+              type: string
+              format: password
+              example: Password123
+            phone:
+              type: string
+              example: "9876543210"
+    responses:
+      201:
+        description: User registered successfully
+      400:
+        description: Invalid or incomplete request
+      500:
+        description: Unexpected server error
     """
 
     data = request.get_json(silent=True)
@@ -90,6 +136,41 @@ def register():
 def login():
     """
     Authenticate a user and return a JWT access token.
+
+    ---
+    tags:
+      - Authentication
+    summary: Login and obtain JWT token
+    description: Authenticate a user and receive a JWT Bearer access token.
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+              example: student@example.com
+            password:
+              type: string
+              format: password
+              example: Password123
+    responses:
+      200:
+        description: Login successful
+      400:
+        description: Email and password are required
+      401:
+        description: Invalid email or password
     """
 
     data = request.get_json(silent=True)
@@ -144,7 +225,23 @@ def login():
 @auth_bp.get('/me')
 @jwt_required()
 def get_current_user():
-    """Return the identity of the currently authenticated user."""
+    """
+    Return the identity of the currently authenticated user.
+
+    ---
+    tags:
+      - Authentication
+    summary: Get current authenticated user
+    security:
+      - BearerAuth: []
+    produces:
+      - application/json
+    responses:
+      200:
+        description: JWT authentication successful
+      401:
+        description: Missing or invalid JWT token
+    """
 
     current_user_id = get_jwt_identity()
 
@@ -157,8 +254,27 @@ def get_current_user():
 @auth_bp.get('/student-test')
 @role_required('STUDENT')
 def student_test():
-    """Test endpoint accessible only to students."""
+    """
+    Test endpoint accessible only to students.
 
+    ---
+    tags:
+      - Authentication
+      - RBAC
+    summary: Test student role authorization
+    description: Demonstrates role-based access control. Only users with the STUDENT role can access this endpoint.
+    security:
+      - BearerAuth: []
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Student RBAC access granted
+      401:
+        description: Missing or invalid JWT token
+      403:
+        description: User does not have the STUDENT role
+    """
     return jsonify({
         'success': True,
         'message': 'Student RBAC access granted'

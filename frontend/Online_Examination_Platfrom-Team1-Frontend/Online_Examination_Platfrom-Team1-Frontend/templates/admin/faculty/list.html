@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Faculty Management - MMCOE Exam</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  >
+
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+
+<div class="app-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-brand">
+        <i class="bi bi-mortarboard-fill"></i>
+        <span>MMCOE Exam</span>
+      </a>
+    </div>
+
+    <div class="sidebar-nav">
+
+      <div class="nav-section-title">
+        Administration
+      </div>
+
+      <div class="nav-item">
+        <a
+          href="/admin/dashboard.html"
+          class="nav-link"
+        >
+          <i class="bi bi-grid-1x2-fill"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a
+          href="/admin/users/list.html"
+          class="nav-link"
+        >
+          <i class="bi bi-people-fill"></i>
+          <span>User Management</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a
+          href="/admin/faculty/list.html"
+          class="nav-link active"
+        >
+          <i class="bi bi-person-badge-fill"></i>
+          <span>Faculty Management</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a
+          href="/subjects/list.html"
+          class="nav-link"
+        >
+          <i class="bi bi-book-fill"></i>
+          <span>Subjects</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a
+          href="/admin/audit/list.html"
+          class="nav-link"
+        >
+          <i class="bi bi-journal-text"></i>
+          <span>Audit Logs</span>
+        </a>
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Navbar -->
+    <header class="top-navbar">
+
+      <div class="navbar-search">
+
+        <i class="bi bi-search"></i>
+
+        <input
+          type="text"
+          id="faculty-search"
+          placeholder="Search faculty..."
+        >
+
+      </div>
+
+
+      <div class="navbar-actions">
+
+        <!-- Notifications -->
+        <div class="dropdown me-2">
+
+          <button
+            class="icon-btn"
+            id="notifDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            title="Notifications"
+          >
+            <i class="bi bi-bell-fill"></i>
+            <span class="badge-dot"></span>
+          </button>
+
+          <div
+            class="dropdown-menu dropdown-menu-end shadow border bg-white p-0 mt-2"
+            style="width: 340px;"
+          >
+
+            <div class="p-3 border-bottom">
+              <h6 class="m-0 fw-bold text-dark">
+                Notifications
+              </h6>
+            </div>
+
+            <div class="p-3 text-muted small">
+              No new notifications.
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Profile -->
+        <div class="dropdown">
+
+          <div
+            class="user-dropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+
+            <div
+              class="avatar"
+              style="background: var(--mmcoe-navy);"
+            >
+              A
+            </div>
+
+            <div class="user-info">
+
+              <span class="user-name">
+                Administrator
+              </span>
+
+              <span class="user-role">
+                Admin
+              </span>
+
+            </div>
+
+            <i
+              class="bi bi-chevron-down ms-1 text-muted"
+              style="font-size: 0.75rem;"
+            ></i>
+
+          </div>
+
+          <ul
+            class="dropdown-menu dropdown-menu-end shadow border mt-2"
+          >
+
+            <li>
+              <a
+                class="dropdown-item text-danger"
+                href="/auth/login.html"
+              >
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Logout
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- Page -->
+    <main class="content-body">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+
+        <ol class="breadcrumb small">
+
+          <li class="breadcrumb-item">
+            <a href="/admin/dashboard.html">
+              Admin
+            </a>
+          </li>
+
+          <li
+            class="breadcrumb-item active"
+            aria-current="page"
+          >
+            Faculty Management
+          </li>
+
+        </ol>
+
+      </nav>
+
+
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between mb-4">
+
+        <div>
+
+          <h3 class="fw-bold m-0">
+            Faculty Management
+          </h3>
+
+          <p class="text-muted small m-0">
+            Manage faculty accounts, designations, departments, and status
+          </p>
+
+        </div>
+
+        <a
+          href="/admin/faculty/create.html"
+          class="btn btn-primary-custom"
+        >
+          <i class="bi bi-person-plus-fill me-1"></i>
+          Add Faculty
+        </a>
+
+      </div>
+
+
+      <!-- Faculty Table -->
+      <div class="glass-card p-4">
+
+        <div class="table-responsive">
+
+          <table class="table table-hover align-middle small">
+
+            <thead>
+
+              <tr class="text-muted">
+
+                <th>Faculty ID</th>
+                <th>Employee No.</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="faculty-table-body">
+
+              <tr>
+
+                <td
+                  colspan="9"
+                  class="text-center text-muted py-4"
+                >
+                  Loading faculty...
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</div>
+
+
+<!-- Bootstrap -->
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
+
+<!-- Existing application scripts -->
+<script src="/static/js/app.js"></script>
+<script src="/static/js/api.js"></script>
+
+<!-- Faculty API integration -->
+<script src="/static/js/admin_faculty.js"></script>
+
+</body>
+</html>

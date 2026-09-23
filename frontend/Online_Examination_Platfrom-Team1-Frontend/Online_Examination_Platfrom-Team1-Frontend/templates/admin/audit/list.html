@@ -137,29 +137,16 @@
                   <th>Entity</th>
                   <th>Action</th>
                   <th>IP Address</th>
-                  <th>JSON Diff (oldValue / newValue)</th>
+                  <th>Details</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td><span class="font-monospace">#1001</span></td>
-                  <td class="text-muted">2026-08-07 14:45:00</td>
-                  <td class="fw-semibold">#2 (Dr. Rajesh Sharma)</td>
-                  <td><span class="badge bg-secondary">Evaluation</span></td>
-                  <td><span class="badge bg-primary">UPDATE</span></td>
-                  <td class="font-monospace text-info">192.168.1.45</td>
-                  <td><code class="text-success">{ "status": "FINALIZED", "marks": 100 }</code></td>
-                </tr>
-                <tr>
-                  <td><span class="font-monospace">#1002</span></td>
-                  <td class="text-muted">2026-08-07 14:35:00</td>
-                  <td class="fw-semibold">#4 (Shlok Powar)</td>
-                  <td><span class="badge bg-secondary">ExamAttempt</span></td>
-                  <td><span class="badge bg-info">CREATE</span></td>
-                  <td class="font-monospace text-info">192.168.1.88</td>
-                  <td><code class="text-info">{ "attemptNumber": 1, "status": "SUBMITTED" }</code></td>
-                </tr>
-              </tbody>
+              <tbody id="audit-log-body">
+  <tr>
+    <td colspan="7" class="text-center text-muted py-4">
+      Loading audit logs...
+    </td>
+  </tr>
+</tbody>
             </table>
           </div>
         </div>
@@ -168,6 +155,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/app.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/admin_audit.js"></script>
 </body>
 </html>

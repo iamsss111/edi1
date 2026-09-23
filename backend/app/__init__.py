@@ -1,12 +1,13 @@
 """
 Online Examination Platform - Flask Application Factory
 """
-from flask import Flask
+from flask import Flask, app
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from app.extensions.database import db
 from app.config.settings import config
 from flask_migrate import Migrate
+from flasgger import Swagger
 from app import models
 
 migrate = Migrate()
@@ -24,6 +25,36 @@ def create_app(config_name: str = 'development') -> Flask:
     """
     # Create Flask application
     app = Flask(__name__)
+    swagger_config = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Online Examination Platform API",
+        "description": "REST API for the Online Examination Platform",
+        "version": "1.0.0"
+    },
+    "securityDefinitions": {
+    "BearerAuth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "Enter: Bearer <your JWT token>"
+    }
+}
+}
+
+    Swagger(app, config={
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec_1",
+            "route": "/apispec_1.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "specs_route": "/apidocs/"
+}, template=swagger_config)
     
     # Load configuration
     app.config.from_object(config.get(config_name, config['default']))

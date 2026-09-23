@@ -138,7 +138,9 @@ def admin_permissions():
 @app.route('/admin/system/metrics.html')
 def admin_metrics():
     return render_template('admin/system/metrics.html')
-
+@app.route('/admin/faculty/list.html')
+def admin_faculty_list():
+    return render_template('admin/faculty/list.html')
 # Subjects Routes
 @app.route('/subjects/list.html')
 def subjects_list():

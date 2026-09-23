@@ -148,8 +148,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon navy"><i class="bi bi-shield-check"></i></div>
               <div class="stat-info">
-                <h3>3</h3>
-                <p>RBAC System Roles</p>
+                <h3 id="total-roles">3</h3>
+<p>RBAC System Roles</p>
               </div>
             </div>
           </div>
@@ -157,8 +157,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon emerald"><i class="bi bi-check-all"></i></div>
               <div class="stat-info">
-                <h3>100%</h3>
-                <p>System Uptime</p>
+                <h3 id="total-exams">0</h3>
+<p>Total Exams</p>
               </div>
             </div>
           </div>
@@ -166,8 +166,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon amber"><i class="bi bi-lightning-charge-fill"></i></div>
               <div class="stat-info">
-                <h3>12.45 ms</h3>
-                <p>Avg Query Latency</p>
+              <h3 id="total-questions">0</h3>
+<p>Total Questions</p>
               </div>
             </div>
           </div>
@@ -193,29 +193,13 @@
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td class="text-muted">Today, 02:45 PM</td>
-                      <td class="fw-semibold">Dr. Rajesh Sharma</td>
-                      <td>Evaluation</td>
-                      <td><span class="badge bg-primary">UPDATE</span></td>
-                      <td><span class="text-emerald fw-bold">SUCCESS</span></td>
-                    </tr>
-                    <tr>
-                      <td class="text-muted">Today, 02:35 PM</td>
-                      <td class="fw-semibold">Shlok Powar</td>
-                      <td>ExamAttempt</td>
-                      <td><span class="badge bg-info">CREATE</span></td>
-                      <td><span class="text-emerald fw-bold">SUCCESS</span></td>
-                    </tr>
-                    <tr>
-                      <td class="text-muted">Today, 02:30 PM</td>
-                      <td class="fw-semibold">Rutuja Ghodekar</td>
-                      <td>ExamAttempt</td>
-                      <td><span class="badge bg-info">CREATE</span></td>
-                      <td><span class="text-emerald fw-bold">SUCCESS</span></td>
-                    </tr>
-                  </tbody>
+                  <tbody id="audit-log-body">
+  <tr>
+    <td colspan="5" class="text-center text-muted py-4">
+      Loading audit logs...
+    </td>
+  </tr>
+</tbody>
                 </table>
               </div>
             </div>
@@ -292,6 +276,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/app.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/admin_dashboard.js"></script>
 </body>
 </html>
