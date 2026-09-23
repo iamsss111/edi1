@@ -49,9 +49,9 @@ async function sendIntegrityEvent(event) {
       {
         method: 'POST',
         body: JSON.stringify({
-          event_type: event.type,
-          metadata: event.metadata
-        })
+  event_type: event.type,
+  details: event.metadata
+})
       }
     );
 

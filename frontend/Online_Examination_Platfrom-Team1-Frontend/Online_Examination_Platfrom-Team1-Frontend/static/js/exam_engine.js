@@ -36,6 +36,11 @@ async function initializeExam() {
 
     examState.attemptId = attempt.attempt_id;
     examState.examId = attempt.exam_id;
+    if (!attempt.ends_at) {
+  throw new Error(
+    'The examination end time was not provided.'
+  );
+}
 
     const response = await apiRequest(
       `/exams/${examState.examId}/questions`,
@@ -62,10 +67,18 @@ async function initializeExam() {
     }
 
     renderExamHeader(response.data);
-    renderQuestions();
-    renderQuestionPalette();
+renderQuestions();
+renderQuestionPalette();
 
-    navigateQuestion(0);
+await restoreSavedAnswers();
+
+navigateQuestion(0);
+
+startExamTimer(
+  attempt.ends_at,
+  'examTimer',
+  autoSubmitExam
+);
 
   } catch (error) {
     console.error('Unable to initialize examination:', error);
@@ -262,7 +275,60 @@ function renderQuestionPalette() {
   });
 }
 
+/* --------------------------------------------------------------------------
+   RESTORE SAVED ANSWERS
+   -------------------------------------------------------------------------- */
 
+async function restoreSavedAnswers() {
+  try {
+    const response = await apiRequest(
+      `/attempts/${examState.attemptId}/answers`,
+      {
+        method: 'GET'
+      }
+    );
+
+    if (
+      !response ||
+      !response.success ||
+      !response.data ||
+      !Array.isArray(response.data.answers)
+    ) {
+      console.warn('No saved answers were returned.');
+      return;
+    }
+
+    response.data.answers.forEach(answer => {
+      examState.answers[answer.exam_question_id] =
+        answer.selected_option_id;
+
+      const radioButton = document.querySelector(
+        `input[name="question_${answer.exam_question_id}"][value="${answer.selected_option_id}"]`
+      );
+
+      if (radioButton) {
+        radioButton.checked = true;
+      }
+
+      const questionIndex = examState.questions.findIndex(
+        question =>
+          question.exam_question_id === answer.exam_question_id
+      );
+
+      if (questionIndex !== -1) {
+        markAnswered(questionIndex);
+      }
+    });
+
+    console.log('Saved answers restored:', response.data.answers);
+
+  } catch (error) {
+    console.error(
+      'Unable to restore saved answers:',
+      error
+    );
+  }
+}
 /* --------------------------------------------------------------------------
    ANSWERS
    -------------------------------------------------------------------------- */

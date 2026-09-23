@@ -172,30 +172,15 @@
         const attempt =
           response.data;
 
-        sessionStorage.setItem(
-          'exam_runtime_start',
-          JSON.stringify({
-
-            exam_id:
-              attempt.exam_id,
-
-            attempt_id:
-              attempt.attempt_id,
-
-            registration_id:
-              attempt.registration_id,
-
-            attempt_number:
-              attempt.attempt_number,
-
-            status:
-              attempt.status,
-
-            started_at:
-              attempt.started_at
-
-          })
-        );
+        sessionStorage.setItem('exam_runtime_start', JSON.stringify({
+  exam_id: attempt.exam_id,
+  attempt_id: attempt.attempt_id,
+  registration_id: attempt.registration_id,
+  attempt_number: attempt.attempt_number,
+  status: attempt.status,
+  started_at: attempt.started_at,
+  ends_at: attempt.ends_at
+}));
 
         window.location.href =
           '/exam_runtime/exam.html';
