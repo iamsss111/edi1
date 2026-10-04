@@ -141,6 +141,30 @@ def admin_metrics():
 @app.route('/admin/faculty/list.html')
 def admin_faculty_list():
     return render_template('admin/faculty/list.html')
+
+@app.route('/admin/records.html')
+def admin_records():
+    return render_template('admin/records.html')
+
+@app.route('/admin/students/list.html')
+def admin_students_list():
+    return render_template('admin/students/list.html')
+
+@app.route('/admin/students/create.html')
+def admin_students_create():
+    return render_template('admin/students/form.html')
+
+@app.route('/admin/students/edit.html')
+def admin_students_edit():
+    return render_template('admin/students/form.html')
+
+@app.route('/admin/faculty/create.html')
+def admin_faculty_create():
+    return render_template('admin/faculty/create.html')
+
+@app.route('/admin/faculty/edit.html')
+def admin_faculty_edit():
+    return render_template('admin/faculty/edit.html')
 # Subjects Routes
 @app.route('/subjects/list.html')
 def subjects_list():

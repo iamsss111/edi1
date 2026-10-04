@@ -79,6 +79,18 @@
         </a>
       </div>
       <div class="nav-item">
+        <a href="/admin/faculty/list.html" class="nav-link {% if '/faculty/' in request.path %}active{% endif %}">
+          <i class="bi bi-person-badge-fill"></i>
+          <span>Faculty Management</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="/admin/records.html" class="nav-link {% if request.path == '/admin/records.html' %}active{% endif %}">
+          <i class="bi bi-table"></i>
+          <span>Academic Records</span>
+        </a>
+      </div>
+      <div class="nav-item">
         <a href="/subjects/list.html" class="nav-link {% if '/subjects/' in request.path %}active{% endif %}">
           <i class="bi bi-book-fill"></i>
           <span>Subjects</span>
