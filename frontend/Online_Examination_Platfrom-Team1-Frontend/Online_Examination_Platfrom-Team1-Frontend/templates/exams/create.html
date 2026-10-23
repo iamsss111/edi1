@@ -306,11 +306,11 @@
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label class="form-label small fw-semibold">Registration Start</label>
-                  <input type="datetime-local" class="form-control form-control-custom">
+                  <div class="form-control form-control-custom text-muted">Opens when the exam is published</div>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-semibold">Registration End</label>
-                  <input type="datetime-local" class="form-control form-control-custom">
+                  <label class="form-label small fw-semibold">Registration End (defaults to exam end)</label>
+                  <input type="datetime-local" class="form-control form-control-custom" title="Leave blank to keep registration open throughout the exam window">
                 </div>
               </div>
 
@@ -475,6 +475,26 @@ async function handleCreateExam(event) {
             throw new Error(
                 response?.message || 'Failed to create exam.'
             );
+        }
+
+        const scheduleInputs = [...document.querySelectorAll('#step-3 input[type="datetime-local"]')];
+        const startTime = scheduleInputs[0]?.value;
+        const endTime = scheduleInputs[1]?.value;
+        const registrationEndTime = scheduleInputs[2]?.value;
+        if (startTime && endTime) {
+            const numericInputs = [...document.querySelectorAll('#step-2 input[type="number"]')];
+            await apiRequest(`/exams/${response.data.exam_id}/schedule`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    start_time: new Date(startTime).toISOString(),
+                    end_time: new Date(endTime).toISOString(),
+                    registration_end_time: registrationEndTime ? new Date(registrationEndTime).toISOString() : null,
+                    max_attempts: Number(numericInputs[2]?.value || 1),
+                    is_active: true
+                })
+            });
+        } else {
+            throw new Error('Set both exam start and end times to create its schedule. The exam was saved as a draft.');
         }
 
         alert(

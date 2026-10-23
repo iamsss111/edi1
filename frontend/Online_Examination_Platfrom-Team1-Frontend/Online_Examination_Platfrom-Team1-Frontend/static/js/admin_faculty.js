@@ -136,6 +136,14 @@ function renderFaculty(records) {
                             <i class="bi bi-pencil"></i>
                         </a>
 
+                        <a
+                            href="/admin/faculty/edit.html?id=${faculty.faculty_id}#facultySubjectAssignments"
+                            class="btn btn-sm btn-outline-info"
+                            title="Assign subjects"
+                        >
+                            <i class="bi bi-journal-plus"></i>
+                        </a>
+
                         <button
                             type="button"
                             class="btn btn-sm btn-outline-light"

@@ -861,6 +861,9 @@ def create_faculty_endpoint():
             department_id=data.get('department_id'),
             employee_number=data.get('employee_number'),
             designation=data.get('designation'),
+            subject_id=data.get('subject_id'),
+            subject_semester=data.get('subject_semester'),
+            subject_year=data.get('subject_year'),
         )
 
         return jsonify({

@@ -36,6 +36,10 @@ def student_exams_available():
 def student_exams_registered():
     return render_template('student/exams/registered.html')
 
+@app.route('/student/subjects.html')
+def student_subjects():
+    return render_template('student/subjects.html')
+
 @app.route('/student/results/list.html')
 def student_results():
     return render_template('student/results/list.html')
@@ -43,6 +47,10 @@ def student_results():
 @app.route('/student/results/detail.html')
 def student_result_detail():
     return render_template('student/results/detail.html')
+
+@app.route('/profile.html')
+def profile_page():
+    return render_template('profile.html')
 
 # Faculty Portal Routes
 @app.route('/faculty/dashboard.html')
@@ -142,22 +150,6 @@ def admin_metrics():
 def admin_faculty_list():
     return render_template('admin/faculty/list.html')
 
-@app.route('/admin/records.html')
-def admin_records():
-    return render_template('admin/records.html')
-
-@app.route('/admin/students/list.html')
-def admin_students_list():
-    return render_template('admin/students/list.html')
-
-@app.route('/admin/students/create.html')
-def admin_students_create():
-    return render_template('admin/students/form.html')
-
-@app.route('/admin/students/edit.html')
-def admin_students_edit():
-    return render_template('admin/students/form.html')
-
 @app.route('/admin/faculty/create.html')
 def admin_faculty_create():
     return render_template('admin/faculty/create.html')
@@ -165,6 +157,18 @@ def admin_faculty_create():
 @app.route('/admin/faculty/edit.html')
 def admin_faculty_edit():
     return render_template('admin/faculty/edit.html')
+
+@app.route('/admin/subjects/list.html')
+def admin_subjects_list():
+    return render_template('admin/subjects/list.html')
+
+@app.route('/admin/students/list.html')
+def admin_students_list():
+    return render_template('admin/students/list.html')
+
+@app.route('/admin/students/form.html')
+def admin_students_form():
+    return render_template('admin/students/form.html')
 # Subjects Routes
 @app.route('/subjects/list.html')
 def subjects_list():

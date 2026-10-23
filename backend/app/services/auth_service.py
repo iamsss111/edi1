@@ -5,7 +5,7 @@ Contains business logic for user registration and authentication.
 """
 
 from app.extensions.database import db
-from app.models import User, Role
+from app.models import User, Role, Student, Department
 from app.utils.password import hash_password, verify_password
 
 
@@ -16,6 +16,11 @@ def register_user(
     password: str,
     role_name: str = 'STUDENT',
     phone: str | None = None,
+    department_id: int | None = None,
+    roll_number: str | None = None,
+    enrollment_number: str | None = None,
+    year: int | None = None,
+    semester: int | None = None,
 ) -> User:
     """
     Register a new user.
@@ -61,6 +66,22 @@ def register_user(
     if role is None:
         raise ValueError(f"Role '{role_name}' does not exist.")
 
+    profile_values = (department_id, roll_number, enrollment_number, year, semester)
+    if role_name == 'STUDENT' and any(value is not None for value in profile_values) and not all(value is not None for value in profile_values):
+        raise ValueError('Department, roll number, enrollment number, year, and semester are all required for student registration.')
+    if role_name == 'STUDENT' and all(value is not None for value in profile_values):
+        try:
+            department_id, year, semester = int(department_id), int(year), int(semester)
+        except (TypeError, ValueError):
+            raise ValueError('Department, year, and semester must be valid numbers.')
+        roll_number, enrollment_number = str(roll_number).strip(), str(enrollment_number).strip()
+        if not roll_number or not enrollment_number or year <= 0 or semester <= 0:
+            raise ValueError('Student identifiers and academic year/semester must be valid.')
+        if Department.query.filter_by(department_id=department_id, is_active=True).first() is None:
+            raise ValueError('Choose an active department.')
+        if Student.query.filter_by(roll_number=roll_number).first() or Student.query.filter_by(enrollment_number=enrollment_number).first():
+            raise ValueError('That roll or enrollment number is already in use.')
+
     user = User(
         first_name=first_name,
         last_name=last_name,
@@ -73,6 +94,20 @@ def register_user(
 
     try:
         db.session.add(user)
+        db.session.flush()
+        if role_name == 'STUDENT' and all(value is not None for value in profile_values):
+            student = Student(
+                user_id=user.user_id,
+                department_id=int(department_id),
+                roll_number=str(roll_number).strip(),
+                enrollment_number=str(enrollment_number).strip(),
+                year=int(year),
+                semester=int(semester),
+                is_active=True,
+            )
+            if not student.roll_number or not student.enrollment_number or student.year <= 0 or student.semester <= 0:
+                raise ValueError('Student identifiers and academic year/semester must be valid.')
+            db.session.add(student)
         db.session.commit()
 
         return user

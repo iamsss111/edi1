@@ -39,15 +39,11 @@ def generate_result_endpoint(attempt_id: int):
             'data': {
                 'result_id': result.result_id,
                 'attempt_id': result.attempt_id,
-                'total_marks': float(result.total_marks),
-                'obtained_marks': float(result.obtained_marks),
-                'percentage': float(result.percentage),
-                'grade': result.grade,
-                'result_status': result.result_status,
-                'published_at': (
-                    result.published_at.isoformat()
-                    if result.published_at
-                    else None
+                'published': result.published_at is not None,
+                'message': (
+                    'Result is pending faculty publication.'
+                    if result.published_at is None
+                    else 'Result has already been published.'
                 ),
             },
         }), 200
@@ -100,6 +96,12 @@ def get_result_endpoint(attempt_id: int):
             user_id=int(current_user_id),
             attempt_id=attempt_id,
         )
+
+        if result.published_at is None:
+            return jsonify({
+                'success': False,
+                'message': 'Result has not been published yet.',
+            }), 404
 
         return jsonify({
             'success': True,

@@ -128,13 +128,13 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h3 class="fw-bold m-0">Candidate Submission Evaluation</h3>
-              <p class="text-muted small m-0">Student: <strong>Rutuja Ghodekar</strong> &bull; Attempt ID: ATTEMPT-001 &bull; EXAM-DBMS-MID</p>
+              <p id="evaluationAttemptSummary" class="text-muted small m-0">Loading attempt…</p>
             </div>
             <span class="badge bg-warning text-dark px-3 py-2 fs-6">MANUAL_EVALUATION_IN_PROGRESS</span>
           </div>
         </div>
 
-        <div class="row g-4">
+        <div id="attemptEvaluationPanel" class="row g-4" aria-live="polite">
           <div class="col-lg-8">
             <!-- Question 1 EvaluationDetail -->
             <div class="glass-card p-4 mb-4">
@@ -234,6 +234,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/api.js"></script>
   <script src="/static/js/app.js"></script>
+  <script src="/static/js/faculty_evaluation_ui.js"></script>
 </body>
 </html>

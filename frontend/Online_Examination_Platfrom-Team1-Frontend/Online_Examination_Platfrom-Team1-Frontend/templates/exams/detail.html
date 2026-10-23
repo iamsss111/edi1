@@ -584,6 +584,22 @@
         </div>
 
 
+        <div class="glass-card p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold mb-1">Registered Candidates</h5>
+              <p class="text-muted small mb-0">Students registered for this examination</p>
+            </div>
+            <span class="badge bg-info" id="candidateListCount">Loading</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead><tr><th>Student</th><th>Roll Number</th><th>Email</th><th>Registered</th><th>Status</th></tr></thead>
+              <tbody id="examCandidatesBody"><tr><td colspan="5" class="text-muted">Loading registered candidates…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- =====================================================
              EXAM PARAMETERS + SCHEDULE
         ====================================================== -->
@@ -970,12 +986,7 @@ if (publishButton) {
           `${formatNumber(exam.pass_marks)} Marks`;
 
 
-        // Candidate count is not supplied by the current
-        // verified Exam API, so do not display fake data.
-        document.getElementById(
-          'candidateCount'
-        ).textContent =
-          '-';
+        await loadExamCandidates(examId);
 
 
         // ======================================================
@@ -1012,6 +1023,47 @@ if (publishButton) {
 
       }
 
+    }
+
+    async function loadExamCandidates(examId) {
+      const body = document.getElementById('examCandidatesBody');
+      const total = document.getElementById('candidateListCount');
+      try {
+        const response = await apiRequest(
+          `/faculty/exams/${encodeURIComponent(examId)}/registrations`,
+          { method: 'GET' }
+        );
+        if (!response?.success || !response.data) {
+          throw new Error(response?.message || 'Could not load registered candidates.');
+        }
+        const candidates = Array.isArray(response.data.candidates) ? response.data.candidates : [];
+        const registeredCount = candidates.filter(candidate => candidate.status === 'Registered').length;
+        document.getElementById('candidateCount').textContent = String(registeredCount);
+        total.textContent = `${registeredCount} registered`;
+        body.replaceChildren();
+        if (!candidates.length) {
+          const row = body.insertRow();
+          const cell = row.insertCell();
+          cell.colSpan = 5;
+          cell.className = 'text-muted';
+          cell.textContent = 'No students have registered for this exam yet.';
+          return;
+        }
+        candidates.forEach(candidate => {
+          const row = body.insertRow();
+          [candidate.name, candidate.roll_number || '—', candidate.email || '—', formatDateTime(candidate.registered_at), candidate.status].forEach(value => {
+            row.insertCell().textContent = value || '—';
+          });
+        });
+      } catch (error) {
+        body.replaceChildren();
+        const row = body.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 5;
+        cell.className = 'text-danger';
+        cell.textContent = error.message || 'Could not load registered candidates.';
+        total.textContent = 'Unavailable';
+      }
     }
     // ==========================================================
 // PUBLISH EXAM

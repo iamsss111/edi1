@@ -118,8 +118,43 @@ function reindexOptions() {
   });
 }
 
+function ensureMyProfileLinks() {
+  document.querySelectorAll('.dropdown').forEach(dropdown => {
+    if (!dropdown.querySelector('.user-dropdown, .user-profile')) return;
+    const menu = dropdown.querySelector('.dropdown-menu');
+    if (!menu) return;
+
+    const existingLink = Array.from(menu.querySelectorAll('a')).find(link =>
+      link.textContent.trim().toLowerCase().includes('my profile')
+    );
+    if (existingLink) {
+      existingLink.href = '/profile.html';
+      existingLink.removeAttribute('onclick');
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.className = 'dropdown-item';
+    link.href = '/profile.html';
+    link.innerHTML = '<i class="bi bi-person me-2"></i> My Profile';
+    if (menu.matches('ul, ol')) {
+      const listItem = document.createElement('li');
+      listItem.append(link);
+      const divider = menu.querySelector('.dropdown-divider')?.closest('li');
+      menu.insertBefore(listItem, divider || menu.firstElementChild);
+    } else {
+      const divider = menu.querySelector('.dropdown-divider');
+      menu.insertBefore(link, divider || menu.firstElementChild);
+    }
+  });
+}
+
 // Global initialization
 document.addEventListener('DOMContentLoaded', () => {
+  ensureMyProfileLinks();
+  loadAuthenticatedNavbarIdentity();
+  ensureStudentSubjectsLink();
+
   // Add mobile menu button to navbar if not exists
   const navbar = document.querySelector('.top-navbar');
   if (navbar && !navbar.querySelector('.mobile-toggle-btn')) {
@@ -130,3 +165,46 @@ document.addEventListener('DOMContentLoaded', () => {
     navbar.insertBefore(btn, navbar.firstChild);
   }
 });
+
+async function loadAuthenticatedNavbarIdentity() {
+  if (typeof apiRequest !== 'function' || !getAccessToken()) return;
+  try {
+    const response = await apiRequest('/profile');
+    const user = response?.data;
+    if (!user) return;
+    const identityStorage = localStorage.getItem(AUTH_TOKEN_KEY)
+      ? localStorage
+      : sessionStorage.getItem(AUTH_TOKEN_KEY)
+        ? sessionStorage
+        : null;
+    if (identityStorage) identityStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    const roles = { STUDENT: 'Student', FACULTY: 'Faculty', ADMIN: 'Administrator' };
+    document.querySelectorAll('.user-name').forEach(node => {
+      node.textContent = user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    });
+    document.querySelectorAll('.user-role').forEach(node => {
+      node.textContent = roles[user.role] || user.role || 'Account';
+    });
+    const facultyWelcome = document.getElementById('facultyWelcomeHeading');
+    if (facultyWelcome) facultyWelcome.textContent = `Welcome, ${user.full_name || 'Faculty'}`;
+    document.querySelectorAll('.avatar, .user-avatar').forEach(node => {
+      node.textContent = (user.first_name || '?').charAt(0).toUpperCase();
+    });
+  } catch (error) {
+    // Keep the page usable when profile loading is temporarily unavailable.
+    console.debug('Could not refresh navbar identity.', error);
+  }
+}
+
+function ensureStudentSubjectsLink() {
+  if (!location.pathname.startsWith('/student/')) return;
+  const nav = document.querySelector('.sidebar-nav');
+  if (!nav || nav.querySelector('a[href="/student/subjects.html"]')) return;
+  const item = document.createElement('div');
+  item.className = 'nav-item';
+  item.innerHTML = '<a href="/student/subjects.html" class="nav-link"><i class="bi bi-journal-bookmark-fill"></i><span>My Subjects</span></a>';
+  const examsLink = nav.querySelector('a[href*="/student/exams/"]')?.closest('.nav-item');
+  if (examsLink) examsLink.insertAdjacentElement('afterend', item);
+  else nav.append(item);
+  if (location.pathname === '/student/subjects.html') item.querySelector('.nav-link').classList.add('active');
+}

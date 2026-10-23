@@ -47,7 +47,8 @@ def create_exam_schedule_route(exam_id):
             end_time=data['end_time'],
             room=data.get('room'),
             max_attempts=data['max_attempts'],
-            is_active=data['is_active']
+            is_active=data['is_active'],
+            registration_end_time=data.get('registration_end_time')
         )
 
         return jsonify({
@@ -58,6 +59,7 @@ def create_exam_schedule_route(exam_id):
                 'exam_id': schedule.exam_id,
                 'start_time': schedule.start_time.isoformat(),
                 'end_time': schedule.end_time.isoformat(),
+                'registration_end_time': schedule.registration_end_time.isoformat() if schedule.registration_end_time else None,
                 'room': schedule.room,
                 'max_attempts': schedule.max_attempts,
                 'is_active': schedule.is_active
@@ -103,6 +105,7 @@ def get_exam_schedule_route(exam_id):
                 'exam_id': schedule.exam_id,
                 'start_time': schedule.start_time.isoformat(),
                 'end_time': schedule.end_time.isoformat(),
+                'registration_end_time': schedule.registration_end_time.isoformat() if schedule.registration_end_time else None,
                 'room': schedule.room,
                 'max_attempts': schedule.max_attempts,
                 'is_active': schedule.is_active

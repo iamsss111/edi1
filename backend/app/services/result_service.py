@@ -193,7 +193,8 @@ def generate_result(
         percentage=round(percentage, 2),
         grade=grade,
         result_status=result_status,
-        published_at=datetime.now(),
+        # Faculty publication is the visibility boundary for students.
+        published_at=None,
     )
 
     try:
@@ -229,7 +230,7 @@ def get_result(
         attempt_id=attempt_id
     ).first()
 
-    if result is None:
+    if result is None or result.published_at is None:
         raise ValueError(
             "Result has not been generated yet."
         )

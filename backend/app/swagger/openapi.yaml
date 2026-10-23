@@ -29,7 +29,7 @@ paths:
       responses:
         '200': { $ref: '#/components/responses/Success' }
         '500': { $ref: '#/components/responses/Error' }
-  /api/v1/register:
+  /api/v1/auth/register:
     post:
       tags: [Authentication]
       summary: Register a student account
@@ -43,7 +43,14 @@ paths:
         '201': { $ref: '#/components/responses/Success' }
         '400': { $ref: '#/components/responses/Error' }
         '500': { $ref: '#/components/responses/Error' }
-  /api/v1/login:
+  /api/v1/auth/departments:
+    get:
+      tags: [Authentication]
+      summary: List active departments for student signup
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+  /api/v1/auth/login:
     post:
       tags: [Authentication]
       summary: Authenticate and receive a JWT
@@ -57,14 +64,14 @@ paths:
         '200': { $ref: '#/components/responses/LoginSuccess' }
         '400': { $ref: '#/components/responses/Error' }
         '401': { $ref: '#/components/responses/Error' }
-  /api/v1/me:
+  /api/v1/auth/me:
     get:
       tags: [Authentication]
       summary: Get the authenticated user identity
       responses:
         '200': { $ref: '#/components/responses/Success' }
         '401': { $ref: '#/components/responses/Error' }
-  /api/v1/student-test:
+  /api/v1/auth/student-test:
     get:
       tags: [Authentication]
       summary: Verify student role access
@@ -181,6 +188,23 @@ paths:
         content:
           application/json: { schema: { type: object, additionalProperties: true } }
       responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/questions/{question_id}:
+    get:
+      tags: [Faculty]
+      summary: Retrieve a faculty-owned question for editing
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+    put:
+      tags: [Faculty]
+      summary: Update a faculty-owned question
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/QuestionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /api/v1/questions/{question_id}/options:
     post:
       tags: [Faculty]
@@ -214,6 +238,16 @@ paths:
       x-required-role: FACULTY
       parameters: [{ $ref: '#/components/parameters/ExamId' }]
       responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+    put:
+      tags: [Faculty]
+      summary: Update an unregistered draft exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '409': { $ref: '#/components/responses/Error' } }
   /api/v1/exams/{exam_id}/schedule:
     get:
       tags: [Faculty]
@@ -245,6 +279,178 @@ paths:
       x-required-role: FACULTY
       parameters: [{ $ref: '#/components/parameters/ExamId' }]
       responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/exams/available:
+    get:
+      tags: [Student]
+      summary: List upcoming published exams available to the student
+      x-required-role: STUDENT
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' }, '403': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/exams/{exam_id}/register:
+    post:
+      tags: [Student]
+      summary: Register the authenticated student for an exam
+      x-required-role: STUDENT
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '201': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/registrations:
+    get:
+      tags: [Student]
+      summary: List the authenticated student's registrations
+      x-required-role: STUDENT
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/registrations/{registration_id}:
+    get:
+      tags: [Student]
+      summary: Get a registration owned by the authenticated student
+      x-required-role: STUDENT
+      parameters:
+        - name: registration_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/results:
+    get:
+      tags: [Student]
+      summary: List published results belonging to the student
+      x-required-role: STUDENT
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/student/results/{result_id}:
+    get:
+      tags: [Student]
+      summary: Get a published result and question breakdown
+      x-required-role: STUDENT
+      parameters:
+        - name: result_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/exams/{exam_id}/registrations:
+    get:
+      tags: [Faculty]
+      summary: List candidates registered for an owned exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/exams/{exam_id}/attempts:
+    get:
+      tags: [Faculty]
+      summary: List attempts for an owned exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/attempts/{attempt_id}:
+    get:
+      tags: [Faculty]
+      summary: Get an attempt and its question-wise answers
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/attempts/{attempt_id}/evaluate:
+    post:
+      tags: [Faculty]
+      summary: Automatically score objective answers and create a pending result
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/attempts/{attempt_id}/integrity-events:
+    get:
+      tags: [Faculty]
+      summary: Get integrity events for an attempt on an owned exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/AttemptId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/evaluations/pending:
+    get:
+      tags: [Faculty]
+      summary: List submitted attempts without an evaluation score
+      x-required-role: FACULTY
+      parameters:
+        - name: exam_id
+          in: query
+          required: false
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/exams/{exam_id}/results:
+    get:
+      tags: [Faculty]
+      summary: List results for an owned exam, including publication state
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/results/{result_id}/publish:
+    post:
+      tags: [Faculty]
+      summary: Publish one result for an owned exam
+      x-required-role: FACULTY
+      parameters:
+        - name: result_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/exams/{exam_id}/results/publish:
+    post:
+      tags: [Faculty]
+      summary: Publish all unpublished results for an owned exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/dashboard/statistics:
+    get:
+      tags: [Faculty]
+      summary: Get faculty dashboard statistics
+      x-required-role: FACULTY
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/exams/{exam_id}/analytics:
+    get:
+      tags: [Faculty]
+      summary: Get registration, outcome, score, and question analytics for an owned exam
+      x-required-role: FACULTY
+      parameters: [{ $ref: '#/components/parameters/ExamId' }]
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/faculty/students/{student_id}/performance:
+    get:
+      tags: [Faculty]
+      summary: Get a student's published results for exams owned by this faculty member
+      x-required-role: FACULTY
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/notifications:
+    get:
+      tags: [Student, Faculty, Admin]
+      summary: List notifications for the authenticated user
+      parameters:
+        - name: unread
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/notifications/unread-count:
+    get:
+      tags: [Student, Faculty, Admin]
+      summary: Count unread notifications for the authenticated user
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
+  /api/v1/notifications/{notification_id}/read:
+    patch:
+      tags: [Student, Faculty, Admin]
+      summary: Mark one owned notification as read
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses: { '200': { $ref: '#/components/responses/Success' }, '404': { $ref: '#/components/responses/Error' } }
+  /api/v1/notifications/read-all:
+    patch:
+      tags: [Student, Faculty, Admin]
+      summary: Mark all notifications belonging to the current user as read
+      responses: { '200': { $ref: '#/components/responses/Success' }, '401': { $ref: '#/components/responses/Error' } }
   /api/v1/admin/exams:
     get:
       tags: [Admin]
@@ -551,13 +757,18 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [first_name, last_name, email, password]
+      required: [first_name, last_name, email, password, department_id, roll_number, enrollment_number, year, semester]
       properties:
         first_name: { type: string }
         last_name: { type: string }
         email: { type: string, format: email }
         password: { type: string, format: password }
         phone: { type: string }
+        department_id: { type: integer }
+        roll_number: { type: string }
+        enrollment_number: { type: string }
+        year: { type: integer }
+        semester: { type: integer }
     LoginRequest:
       type: object
       required: [email, password]

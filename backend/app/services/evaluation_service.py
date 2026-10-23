@@ -125,6 +125,11 @@ def evaluate_attempt(user_id: int, attempt_id: int) -> ExamAttempt:
 
     try:
         db.session.commit()
+        # Create the result record as unpublished so Faculty can review and
+        # release it through the result publication endpoints.
+        from app.services.result_service import generate_result
+
+        generate_result(user_id=user_id, attempt_id=attempt_id)
         return attempt
 
     except Exception:

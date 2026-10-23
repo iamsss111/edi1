@@ -527,6 +527,8 @@
 
                   <th>Result ID</th>
 
+                  <th>Student</th>
+
                   <th>Attempt ID</th>
 
                   <th>Obtained Marks</th>
@@ -538,6 +540,7 @@
                   <th>Result Status</th>
 
                   <th>Published Date</th>
+                  <th>Publication</th>
 
                 </tr>
 
@@ -709,7 +712,7 @@
       // ----------------------------------------------------------
 
       document.getElementById('examTitle').textContent =
-        `${data.title} - Results`;
+        `${data.exam_title} - Results`;
 
 
       document.getElementById('totalMarks').textContent =
@@ -830,6 +833,10 @@
         `ATT-${result.attempt_id}`;
 
 
+      const studentName =
+        result.student_name || `Student ${result.student_id || ''}`;
+
+
       const obtainedMarks =
         `${formatNumber(result.obtained_marks)} / ${formatNumber(result.total_marks)}`;
 
@@ -857,6 +864,10 @@
         </td>
 
         <td>
+          ${escapeHtml(studentName)}
+        </td>
+
+        <td>
           ${escapeHtml(attemptId)}
         </td>
 
@@ -878,6 +889,12 @@
 
         <td>
           ${escapeHtml(publishedDate)}
+        </td>
+
+        <td>
+          ${result.published
+            ? '<span class="badge bg-success">Published</span>'
+            : `<button class="btn btn-sm btn-outline-primary js-publish-result" data-result-id="${escapeHtml(result.result_id)}">Publish</button>`}
         </td>
 
       `;
@@ -1083,6 +1100,10 @@
 
           result.result_id,
 
+          result.student_name,
+
+          result.student_id,
+
           result.attempt_id,
 
           result.obtained_marks,
@@ -1160,6 +1181,20 @@
       'input',
       filterResults
     );
+
+  document.getElementById('resultsTableBody').addEventListener('click', async event => {
+    const button = event.target.closest('.js-publish-result');
+    if (!button) return;
+    button.disabled = true;
+    try {
+      await apiRequest(`/faculty/results/${encodeURIComponent(button.dataset.resultId)}/publish`, { method: 'POST' });
+      showToast('Result published and student notified.', 'success');
+      await loadExamResults();
+    } catch (error) {
+      button.disabled = false;
+      showError(error.message || 'Could not publish this result.');
+    }
+  });
 
 
   // ============================================================

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.extensions.database import db
 from app.models import Faculty, Exam, ExamQuestion, ExamSchedule
 
@@ -36,14 +38,15 @@ def publish_exam(user_id, exam_id):
         )
 
     # Exam must have an active schedule
-    schedule = ExamSchedule.query.filter_by(
-        exam_id=exam_id,
-        is_active=True
+    schedule = ExamSchedule.query.filter(
+        ExamSchedule.exam_id == exam_id,
+        ExamSchedule.is_active.is_(True),
+        ExamSchedule.end_time > datetime.now(),
     ).first()
 
     if schedule is None:
         raise ValueError(
-            "Exam must have an active schedule before publishing."
+            "Exam must have an active upcoming or in-progress schedule before publishing."
         )
 
     # Update status

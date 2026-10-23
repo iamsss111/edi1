@@ -17,8 +17,6 @@ Adaptive behavior:
 """
 
 from flask import abort
-from sqlalchemy import and_
-
 from app.extensions.database import db
 from app.models import (
     Exam,
@@ -27,6 +25,7 @@ from app.models import (
     StudentAnswer,
     Question,
     CandidateRegistration,
+    Student,
 )
 
 
@@ -72,9 +71,14 @@ def _get_attempt_for_student(user_id: int, attempt_id: int) -> ExamAttempt:
             ExamAttempt.registration_id
             == CandidateRegistration.registration_id
         )
+        .join(
+            Student,
+            CandidateRegistration.student_id == Student.student_id,
+        )
         .filter(
             ExamAttempt.attempt_id == attempt_id,
-            CandidateRegistration.student_id == user_id,
+            CandidateRegistration.student_id == Student.student_id,
+            Student.user_id == user_id,
         )
         .first()
     )

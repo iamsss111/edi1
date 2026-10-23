@@ -127,8 +127,9 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
           <div>
             <h3 class="fw-bold m-0">Exam Performance Analytics Report</h3>
-            <p class="text-muted small m-0">Aggregate performance metrics for EXAM-DBMS-MID (DBMS Mid-Term Assessment)</p>
+            <p id="reportExamTitle" class="text-muted small m-0">Select an exam to load live analytics.</p>
           </div>
+          <select id="reportExamSelect" class="form-select" style="max-width:320px" aria-label="Choose exam"><option>Loading exams…</option></select>
           <button class="btn btn-outline-info" onclick="window.print()">
             <i class="bi bi-printer-fill me-1"></i> Export Report PDF
           </button>
@@ -139,7 +140,7 @@
             <div class="glass-card stat-card">
               <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
               <div class="stat-info">
-                <h3>2</h3>
+                <h3 id="reportCandidateCount">—</h3>
                 <p>Total Candidates</p>
               </div>
             </div>
@@ -148,7 +149,7 @@
             <div class="glass-card stat-card">
               <div class="stat-icon emerald"><i class="bi bi-check-circle-fill"></i></div>
               <div class="stat-info">
-                <h3>100%</h3>
+                <h3 id="reportPassRate">—</h3>
                 <p>Pass Rate</p>
               </div>
             </div>
@@ -157,7 +158,7 @@
             <div class="glass-card stat-card">
               <div class="stat-icon purple"><i class="bi bi-bar-chart-fill"></i></div>
               <div class="stat-info">
-                <h3>95.00%</h3>
+                <h3 id="reportAverage">—</h3>
                 <p>Average Percentage</p>
               </div>
             </div>
@@ -166,8 +167,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon amber"><i class="bi bi-clock-history"></i></div>
               <div class="stat-info">
-                <h3>42 min</h3>
-                <p>Avg Time Spent</p>
+                <h3 id="reportSubmitted">—</h3>
+                <p>Submitted Attempts</p>
               </div>
             </div>
           </div>
@@ -178,7 +179,7 @@
           <div class="col-lg-6">
             <div class="glass-card p-4 h-100">
               <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-info me-2"></i>Grade Distribution Breakdown</h5>
-              <div class="d-flex flex-column gap-3">
+              <div id="reportGradeDistribution" class="d-flex flex-column gap-3">
                 <div>
                   <div class="d-flex justify-content-between small mb-1">
                     <span>A+ Grade (90% - 100%)</span>
@@ -222,7 +223,7 @@
                       <th>Accuracy Rate</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="reportAccuracyBody">
                     <tr>
                       <td class="fw-bold">Q1</td>
                       <td>MCQ</td>
@@ -247,5 +248,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/static/js/app.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/report_ui.js"></script>
+  <script src="/static/js/lifecycle_ui.js"></script>
 </body>
 </html>

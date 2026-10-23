@@ -51,9 +51,14 @@ function getAccessToken() {
  * Retrieve the stored authenticated user.
  */
 function getStoredUser() {
-  const rawUser =
-    localStorage.getItem(AUTH_USER_KEY) ||
-    sessionStorage.getItem(AUTH_USER_KEY);
+  // Read identity from the same storage as the token. A stale account in the
+  // other storage can otherwise make an Admin page render as Faculty.
+  const storage = localStorage.getItem(AUTH_TOKEN_KEY)
+    ? localStorage
+    : sessionStorage.getItem(AUTH_TOKEN_KEY)
+      ? sessionStorage
+      : null;
+  const rawUser = storage?.getItem(AUTH_USER_KEY);
 
   if (!rawUser) {
     return null;
@@ -151,7 +156,7 @@ async function apiRequest(endpoint, options = {}) {
  * Authenticate a user with the backend.
  */
 async function login(email, password, rememberMe = false) {
-  const responseData = await apiRequest('/login', {
+  const responseData = await apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify({
       email,
@@ -184,7 +189,7 @@ async function login(email, password, rememberMe = false) {
  * Retrieve the currently authenticated user from the backend.
  */
 async function getCurrentUser() {
-  return apiRequest('/me', {
+  return apiRequest('/auth/me', {
     method: 'GET'
   });
 }

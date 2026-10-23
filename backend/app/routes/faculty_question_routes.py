@@ -6,6 +6,8 @@ Provides endpoints for faculty question management.
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity
+from app.extensions.database import db
+from app.models import Question
 
 from app.services.faculty_question_service import (
     create_question,
@@ -15,6 +17,46 @@ from app.utils.rbac import role_required
 
 
 faculty_question_bp = Blueprint('faculty_question', __name__)
+
+
+@faculty_question_bp.get('/questions/<int:question_id>')
+@role_required('FACULTY')
+def get_question_detail_endpoint(question_id: int):
+    question = Question.query.filter_by(question_id=question_id, created_by=int(get_jwt_identity())).first()
+    if question is None:
+        return jsonify({'success': False, 'message': 'Question not found or not owned by you.'}), 404
+    return jsonify({'success': True, 'data': {
+        'question_id': question.question_id, 'subject_id': question.subject_id,
+        'question_text': question.question_text, 'question_type': question.question_type,
+        'marks': float(question.marks), 'difficulty': question.difficulty,
+        'explanation': question.explanation,
+        'options': [{'option_id': o.option_id, 'option_text': o.option_text, 'is_correct': o.is_correct, 'option_order': o.option_order} for o in question.options],
+    }}), 200
+
+
+@faculty_question_bp.put('/questions/<int:question_id>')
+@role_required('FACULTY')
+def update_question_endpoint(question_id: int):
+    question = Question.query.filter_by(question_id=question_id, created_by=int(get_jwt_identity())).first()
+    if question is None:
+        return jsonify({'success': False, 'message': 'Question not found or not owned by you.'}), 404
+    data = request.get_json(silent=True) or {}
+    question_text = str(data.get('question_text', '')).strip()
+    try:
+        marks = float(data.get('marks'))
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'message': 'Marks must be a valid number.'}), 400
+    if not question_text or marks <= 0:
+        return jsonify({'success': False, 'message': 'Question text and positive marks are required.'}), 400
+    question.question_text = question_text
+    question.marks = marks
+    question.explanation = (data.get('explanation') or '').strip() or None
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Question update failed.'}), 500
+    return jsonify({'success': True, 'message': 'Question updated.', 'data': {'question_id': question.question_id}}), 200
 
 
 @faculty_question_bp.post('/questions')

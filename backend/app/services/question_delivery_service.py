@@ -5,11 +5,15 @@ Contains business logic for retrieving examination questions
 and their answer options for an authenticated student.
 """
 
+from datetime import datetime, timedelta
+
+from app.extensions.database import db
 from app.models import (
     Exam,
     Student,
     CandidateRegistration,
     ExamQuestion,
+    ExamAttempt,
 )
 
 
@@ -61,6 +65,26 @@ def get_exam_questions(user_id: int, exam_id: int) -> dict:
         raise ValueError(
             "You are not registered for this examination."
         )
+
+    if exam.status != 'Published':
+        raise ValueError("This examination is not available.")
+
+    active_attempt = ExamAttempt.query.filter_by(
+        registration_id=registration.registration_id,
+        status='InProgress',
+    ).first()
+    if active_attempt is None:
+        raise ValueError("Start an examination attempt before requesting its questions.")
+    expires_at = active_attempt.started_at + timedelta(minutes=exam.duration_minutes)
+    if datetime.now() >= expires_at:
+        active_attempt.status = "AutoSubmitted"
+        active_attempt.submitted_at = expires_at
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+        raise ValueError("The examination time has expired.")
 
     # ------------------------------------------------------------
     # 4. Retrieve exam questions

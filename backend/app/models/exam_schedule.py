@@ -42,6 +42,14 @@ class ExamSchedule(db.Model):
         nullable=False
     )
 
+    # Optional registration cutoff; faculty schedules default this to end_time
+    # so registration stays open throughout the exam window.
+    registration_end_time = db.Column(
+        'RegistrationEndTime',
+        db.DateTime,
+        nullable=True
+    )
+
     room = db.Column(
         'Room',
         db.String(50)

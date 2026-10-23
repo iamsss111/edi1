@@ -1,13 +1,12 @@
 """
 Online Examination Platform - Flask Application Factory
 """
-from flask import Flask, app
+from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from app.extensions.database import db
 from app.config.settings import config
 from flask_migrate import Migrate
-from flasgger import Swagger
 from app import models
 
 migrate = Migrate()
@@ -25,37 +24,6 @@ def create_app(config_name: str = 'development') -> Flask:
     """
     # Create Flask application
     app = Flask(__name__)
-    swagger_config = {
-    "swagger": "2.0",
-    "info": {
-        "title": "Online Examination Platform API",
-        "description": "REST API for the Online Examination Platform",
-        "version": "1.0.0"
-    },
-    "securityDefinitions": {
-    "BearerAuth": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "description": "Enter: Bearer <your JWT token>"
-    }
-}
-}
-
-    Swagger(app, config={
-    "headers": [],
-    "specs": [
-        {
-            "endpoint": "apispec_1",
-            "route": "/apispec_1.json",
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
-        }
-    ],
-    "static_url_path": "/flasgger_static",
-    "specs_route": "/apidocs/"
-}, template=swagger_config)
-    
     # Load configuration
     app.config.from_object(config.get(config_name, config['default']))
 
@@ -70,8 +38,8 @@ def create_app(config_name: str = 'development') -> Flask:
     
     # Initialize extensions
     db.init_app(app)
-    migrate = Migrate(app, db)
-    jwt = JWTManager(app)
+    Migrate(app, db)
+    JWTManager(app)
     
     # Register blueprints
     register_blueprints(app)
@@ -96,7 +64,7 @@ def register_blueprints(app: Flask) -> None:
 
     # Authentication blueprint
     from app.routes.auth_routes import auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/api/v1')
+    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
 
     from app.routes.exam_attempt_routes import exam_attempt_bp
     app.register_blueprint(exam_attempt_bp, url_prefix='/api/v1')
@@ -142,3 +110,9 @@ def register_blueprints(app: Flask) -> None:
 
     from app.routes.admin_routes import admin_bp
     app.register_blueprint(admin_bp, url_prefix='/api/v1')
+
+    from app.routes.lifecycle_routes import lifecycle_bp
+    app.register_blueprint(lifecycle_bp, url_prefix='/api/v1')
+
+    from app.routes.profile_routes import profile_bp
+    app.register_blueprint(profile_bp, url_prefix='/api/v1')

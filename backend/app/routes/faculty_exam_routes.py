@@ -6,6 +6,7 @@ Provides endpoints for faculty exam management.
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity
+from app.extensions.database import db
 
 from app.services.faculty_exam_service import (
     create_exam,
@@ -13,10 +14,43 @@ from app.services.faculty_exam_service import (
     get_exam_details,
     get_exam_results,
 )
+from app.services import faculty_lifecycle_service
 from app.utils.rbac import role_required
 
 
 faculty_exam_bp = Blueprint('faculty_exam', __name__)
+
+
+@faculty_exam_bp.put('/exams/<int:exam_id>')
+@role_required('FACULTY')
+def update_exam_endpoint(exam_id: int):
+    try:
+        exam = get_exam_details(int(get_jwt_identity()), exam_id)
+        if exam.status != 'Draft' or exam.candidate_registrations:
+            return jsonify({'success': False, 'message': 'Only draft exams with no registrations can be edited.'}), 409
+        data = request.get_json(silent=True) or {}
+        title = str(data.get('title', '')).strip()
+        try:
+            duration = int(data.get('duration_minutes'))
+            total_marks = float(data.get('total_marks'))
+            pass_marks = float(data.get('pass_marks'))
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'Duration and marks must be valid numbers.'}), 400
+        if not title or duration <= 0 or total_marks <= 0 or pass_marks < 0 or pass_marks > total_marks:
+            return jsonify({'success': False, 'message': 'Enter a title, positive duration and total marks, and valid passing marks.'}), 400
+        exam.title = title
+        exam.duration_minutes = duration
+        exam.total_marks = total_marks
+        exam.pass_marks = pass_marks
+        exam.instructions = data.get('instructions')
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Exam updated.', 'data': {'exam_id': exam.exam_id, 'title': exam.title}}), 200
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(error)}), 400
+    except Exception:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Exam update failed.'}), 500
 
 
 @faculty_exam_bp.post('/exams')
@@ -244,29 +278,16 @@ def get_exam_results_route(exam_id):
     try:
         user_id = int(get_jwt_identity())
 
-        exam, results = get_exam_results(
-            user_id=user_id,
-            exam_id=exam_id
-        )
+        exam, results = faculty_lifecycle_service.faculty_results(user_id, exam_id)
 
         return jsonify({
             'success': True,
-            'message': 'Exam results retrieved successfully.',
             'data': {
-                'exam': {
-                    'exam_id': exam.exam_id,
-                    'subject_id': exam.subject_id,
-                    'title': exam.title,
-                    'status': exam.status,
-                },
-                'results': [
-                    {
-                        'result': result.result_id,
-                        'attempt_id': attempt.attempt_id,
-                        'registration_id': registration.registration_id,
-                    }
-                    for result, attempt, registration in results
-                ],
+                'exam_id': exam.exam_id,
+                'exam_title': exam.title,
+                'total_marks': float(exam.total_marks),
+                'pass_marks': float(exam.pass_marks),
+                'results': [faculty_lifecycle_service.serialize_result(result) for result in results],
             },
         }), 200
 
@@ -275,6 +296,12 @@ def get_exam_results_route(exam_id):
             'success': False,
             'message': str(error),
         }), 400
+
+    except LookupError as error:
+        return jsonify({
+            'success': False,
+            'message': str(error),
+        }), 404
 
     except Exception:
         return jsonify({

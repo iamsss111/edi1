@@ -13,9 +13,19 @@ from app.services.auth_service import (
     register_user,
     authenticate_user,
 )
+from app.models import Department
 
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+@auth_bp.get('/departments')
+def list_registration_departments():
+    departments = Department.query.filter_by(is_active=True).order_by(Department.department_name.asc()).all()
+    return jsonify({'success': True, 'data': [
+        {'department_id': d.department_id, 'department_code': d.department_code, 'department_name': d.department_name}
+        for d in departments
+    ]}), 200
 
 
 @auth_bp.post('/register')
@@ -83,6 +93,11 @@ def register():
         'last_name',
         'email',
         'password',
+        'department_id',
+        'roll_number',
+        'enrollment_number',
+        'year',
+        'semester',
     ]
 
     missing_fields = [
@@ -103,8 +118,13 @@ def register():
             last_name=data['last_name'],
             email=data['email'],
             password=data['password'],
-            role_name='STUDENT',
-            phone=data.get('phone'),
+        role_name='STUDENT',
+        phone=data.get('phone'),
+        department_id=data.get('department_id'),
+        roll_number=data.get('roll_number'),
+        enrollment_number=data.get('enrollment_number'),
+        year=data.get('year'),
+        semester=data.get('semester'),
         )
 
         return jsonify({

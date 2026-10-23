@@ -126,7 +126,7 @@
 
         <div class="d-flex align-items-center justify-content-between mb-4">
           <div>
-            <h3 class="fw-bold m-0">Welcome, Dr. Rajesh Sharma</h3>
+            <h3 id="facultyWelcomeHeading" class="fw-bold m-0">Welcome</h3>
             <p class="text-muted small m-0">Department of Computer Engineering &bull; MMCOE Pune</p>
           </div>
           <div class="d-flex gap-2">
@@ -145,8 +145,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon maroon"><i class="bi bi-book-fill"></i></div>
               <div class="stat-info">
-                <h3>2</h3>
-                <p>Assigned Subjects</p>
+                <h3 data-faculty-stat="total_exams">0</h3>
+                <p>Total Exams</p>
               </div>
             </div>
           </div>
@@ -154,8 +154,8 @@
             <div class="glass-card stat-card">
               <div class="stat-icon blue"><i class="bi bi-question-circle-fill"></i></div>
               <div class="stat-info">
-                <h3>2</h3>
-                <p>Questions Created</p>
+                <h3 data-faculty-stat="upcoming_exams">0</h3>
+                <p>Upcoming Exams</p>
               </div>
             </div>
           </div>
@@ -163,7 +163,7 @@
             <div class="glass-card stat-card">
               <div class="stat-icon amber"><i class="bi bi-hourglass-split"></i></div>
               <div class="stat-info">
-                <h3>2</h3>
+                <h3 data-faculty-stat="pending_evaluations">0</h3>
                 <p>Pending Evaluations</p>
               </div>
             </div>
@@ -172,7 +172,7 @@
             <div class="glass-card stat-card">
               <div class="stat-icon emerald"><i class="bi bi-people-fill"></i></div>
               <div class="stat-info">
-                <h3>2</h3>
+                <h3 data-faculty-stat="registered_students">0</h3>
                 <p>Enrolled Candidates</p>
               </div>
             </div>
@@ -192,14 +192,16 @@
                 <table class="table table-hover align-middle small m-0">
                   <thead>
                     <tr class="text-muted">
-                      <th>Candidate</th>
-                      <th>Exam Code</th>
-                      <th>Submitted</th>
-                      <th>Auto Score</th>
+                        <th>Attempt</th>
+                        <th>Candidate</th>
+                        <th>Exam</th>
+                        <th>Submitted</th>
+                        <th>Auto Score</th>
+                        <th>Status</th>
                       <th>Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="facultyDashboardPendingBody" aria-live="polite">
                     <tr>
                       <td class="fw-semibold">Rutuja Ghodekar</td>
                       <td><span class="font-monospace">EXAM-DBMS-MID</span></td>
@@ -285,6 +287,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/api.js"></script>
   <script src="/static/js/app.js"></script>
+  <script src="/static/js/lifecycle_ui.js"></script>
 </body>
 </html>

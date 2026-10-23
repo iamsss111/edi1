@@ -151,8 +151,11 @@
         beginButton.innerHTML =
           '<span class="spinner-border spinner-border-sm me-2"></span>Starting Exam...';
 
+        const examId = new URLSearchParams(window.location.search).get('exam_id');
+        if (!examId) throw new Error('Select a registered exam before entering the lobby.');
+
         const response =
-          await apiRequest('/exams/1/start', {
+          await apiRequest(`/exams/${encodeURIComponent(examId)}/start`, {
             method: 'POST'
           });
 

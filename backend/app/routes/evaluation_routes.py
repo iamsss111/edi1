@@ -36,11 +36,8 @@ def evaluate_attempt_endpoint(attempt_id: int):
             'data': {
                 'attempt_id': attempt.attempt_id,
                 'status': attempt.status,
-                'score': (
-                    float(attempt.score)
-                    if attempt.score is not None
-                    else None
-                ),
+                'score': None,
+                'message': 'Evaluation complete; result details are available after faculty publication.',
             },
         }), 200
 

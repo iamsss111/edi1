@@ -266,6 +266,9 @@ def assign_subject_to_faculty(
     if faculty is None:
         raise ValueError("Faculty not found.")
 
+    if not faculty.user.is_active:
+        raise ValueError("Cannot assign a subject to an inactive Faculty account.")
+
     subject = Subject.query.filter_by(subject_id=subject_id).first()
 
     if subject is None:
@@ -273,6 +276,9 @@ def assign_subject_to_faculty(
 
     if not subject.is_active:
         raise ValueError("Cannot assign an inactive subject.")
+
+    if subject.department_id != faculty.department_id:
+        raise ValueError("The subject must belong to the Faculty member's department.")
 
     existing = FacultySubject.query.filter_by(
         faculty_id=faculty_id,
@@ -423,6 +429,9 @@ def create_user(
     last_name = str(last_name).strip()
     email = str(email).strip().lower()
     role_name = str(role_name).strip().upper()
+
+    if role_name == "FACULTY":
+        raise ValueError("Create Faculty from Faculty Management so the account receives a Faculty profile.")
 
     allowed_roles = {"ADMIN", "FACULTY", "STUDENT"}
 
@@ -620,6 +629,9 @@ def change_user_role(user_id, role_name):
             "Role must be ADMIN, FACULTY, or STUDENT."
         )
 
+    if role_name == "FACULTY" and user.faculty is None:
+        raise ValueError("This account has no Faculty profile. Create it from Faculty Management with its department and employee details.")
+
     role = Role.query.filter_by(role_name=role_name).first()
 
     if role is None:
@@ -705,6 +717,9 @@ def create_faculty(
     employee_number,
     designation,
     phone=None,
+    subject_id=None,
+    subject_semester=None,
+    subject_year=None,
 ):
     """
     Create a Faculty account.
@@ -750,6 +765,22 @@ def create_faculty(
 
     if not department.is_active:
         raise ValueError("Cannot assign Faculty to an inactive department.")
+
+    subject = None
+    if subject_id not in (None, ""):
+        try:
+            subject_id = int(subject_id)
+            subject_semester = int(subject_semester)
+            subject_year = int(subject_year)
+        except (TypeError, ValueError):
+            raise ValueError("Select a subject, semester, and academic year for the assignment.")
+        subject = Subject.query.filter_by(subject_id=subject_id).first()
+        if subject is None or not subject.is_active:
+            raise ValueError("Select an active subject.")
+        if subject.department_id != department_id:
+            raise ValueError("The subject must belong to the faculty member's department.")
+        if subject_semester <= 0 or subject_year <= 0:
+            raise ValueError("Subject semester and academic year must be greater than 0.")
 
     existing_email = User.query.filter_by(email=email).first()
 
@@ -812,6 +843,15 @@ def create_faculty(
         )
 
         db.session.add(faculty)
+        db.session.flush()
+        if subject is not None:
+            db.session.add(FacultySubject(
+                faculty_id=faculty.faculty_id,
+                subject_id=subject.subject_id,
+                semester=subject_semester,
+                year=subject_year,
+                is_active=True,
+            ))
         db.session.commit()
 
         return faculty

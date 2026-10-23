@@ -12,6 +12,8 @@ let examState = {
   answers: {},
   reviewQuestions: []
 };
+const pendingAnswerSaves = new Set();
+let autoSubmissionStarted = false;
 
 
 /* --------------------------------------------------------------------------
@@ -347,8 +349,7 @@ async function handleAnswerChange(questionId, optionId) {
   }
 
   // Save the answer to the backend.
-  try {
-    const response = await apiRequest(
+  const saveOperation = apiRequest(
       `/attempts/${examState.attemptId}/answers`,
       {
         method: 'POST',
@@ -357,12 +358,18 @@ async function handleAnswerChange(questionId, optionId) {
           selected_option_id: optionId
         })
       }
-    );
+    ).then(response => {
+      console.log('Answer autosaved:', response);
+    }).catch(error => {
+      console.error('Answer autosave failed:', error);
+    });
 
-    console.log('Answer autosaved:', response);
-  } catch (error) {
-    console.error('Answer autosave failed:', error);
-}
+  pendingAnswerSaves.add(saveOperation);
+  try {
+    await saveOperation;
+  } finally {
+    pendingAnswerSaves.delete(saveOperation);
+  }
 }
 
 
@@ -408,13 +415,34 @@ function escapeHtml(value) {
    AUTO SUBMIT
    -------------------------------------------------------------------------- */
 
-function autoSubmitExam() {
+async function autoSubmitExam() {
+  if (autoSubmissionStarted || !examState.attemptId) {
+    return;
+  }
+  autoSubmissionStarted = true;
+
   alert(
     'Time has expired! Submitting your exam automatically...'
   );
 
-  window.location.href =
-    '/exam_runtime/submitted.html';
+  // Let any final autosave finish before locking the attempt.
+  await Promise.allSettled([...pendingAnswerSaves]);
+
+  try {
+    await apiRequest(
+      `/attempts/${examState.attemptId}/submit`,
+      { method: 'POST' }
+    );
+    window.location.href = '/exam_runtime/submitted.html';
+  } catch (error) {
+    const message = error?.data?.message || '';
+    if (/expired|already been submitted/i.test(message)) {
+      window.location.href = '/exam_runtime/submitted.html';
+      return;
+    }
+    autoSubmissionStarted = false;
+    alert('Automatic submission could not reach the server. Please keep this page open and retry submission.');
+  }
 }
 
 

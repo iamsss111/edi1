@@ -1,6 +1,77 @@
 document.addEventListener('DOMContentLoaded', () => {
-    loadSubjects();
+    initializeSubjectDirectory();
 });
+
+async function initializeSubjectDirectory() {
+    const mode = document.body.dataset.subjectMode;
+    if (mode === 'admin') {
+        await loadSubjects();
+        return;
+    }
+    try {
+        const { data: user } = await apiRequest('/profile');
+        const identityStorage = localStorage.getItem(AUTH_TOKEN_KEY)
+            ? localStorage
+            : sessionStorage.getItem(AUTH_TOKEN_KEY)
+                ? sessionStorage
+                : null;
+        if (identityStorage && user) identityStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+        if (user?.role === 'FACULTY') await loadFacultySubjects();
+        else if (user?.role === 'ADMIN') {
+            window.location.replace('/admin/subjects/list.html');
+            return;
+        }
+        else showSubjectDirectoryError('Sign in with a faculty or administrator account to view subjects.');
+    } catch (error) {
+        showSubjectDirectoryError(error.message || 'Could not verify your account role.');
+    }
+}
+
+function showSubjectDirectoryError(message) {
+    const body = document.getElementById('subject-table-body');
+    if (body) body.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${escapeHtml(message)}</td></tr>`;
+}
+
+async function loadFacultySubjects() {
+    const tbody = document.getElementById('subject-table-body');
+    if (!tbody) return;
+
+    const addButton = document.getElementById('add-subject-btn');
+    if (addButton) addButton.classList.add('d-none');
+    document.getElementById('subject-page-title').textContent = 'My Academic Subjects';
+    document.getElementById('subject-page-description').textContent =
+        'Subjects assigned to you by your administrator, with semester and academic year.';
+    document.getElementById('subject-table-head').innerHTML = `
+        <tr class="text-muted">
+            <th>Code</th><th>Subject Name</th><th>Description</th><th>Credits</th>
+            <th>Semester</th><th>Academic Year</th><th>Status</th>
+        </tr>`;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading assigned subjects…</td></tr>';
+
+    try {
+        const response = await apiRequest('/subjects', { method: 'GET' });
+        const assignments = Array.isArray(response.data) ? response.data : [];
+        if (!assignments.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No active subjects are assigned to your faculty profile.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = assignments.map(assignment => `
+            <tr>
+                <td><span class="font-monospace text-info">${escapeHtml(assignment.subject_code)}</span></td>
+                <td class="fw-semibold">${escapeHtml(assignment.subject_name)}</td>
+                <td class="text-muted">${escapeHtml(assignment.description || '—')}</td>
+                <td><span class="badge bg-secondary">${escapeHtml(assignment.credits)}</span></td>
+                <td>${escapeHtml(assignment.semester)}</td>
+                <td>${escapeHtml(assignment.year)}</td>
+                <td><span class="status-badge badge-active">Assigned</span></td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Failed to load faculty subjects:', error);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${escapeHtml(error.message || 'Failed to load assigned subjects.')}</td></tr>`;
+    }
+}
 
 async function loadSubjects() {
     const tbody = document.getElementById('subject-table-body');
@@ -33,6 +104,7 @@ async function loadSubjects() {
             return;
         }
 
+        const adminMode = document.body.dataset.subjectMode === 'admin';
         tbody.innerHTML = subjects.map(subject => `
             <tr>
                 <td>#${subject.subject_id}</td>
@@ -71,13 +143,7 @@ async function loadSubjects() {
 
                 <td>
                     <div class="d-flex gap-1">
-                        <a
-                            href="/subjects/edit.html?id=${subject.subject_id}"
-                            class="btn btn-sm btn-outline-light"
-                            title="Edit Subject"
-                        >
-                            <i class="bi bi-pencil"></i>
-                        </a>
+                        ${adminMode ? '' : `<a href="/subjects/edit.html?id=${subject.subject_id}" class="btn btn-sm btn-outline-light" title="Edit Subject"><i class="bi bi-pencil"></i></a>`}
 
                         <button
                             type="button"

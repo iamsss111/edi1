@@ -11,7 +11,8 @@ def create_exam_schedule(
     end_time,
     room,
     max_attempts,
-    is_active
+    is_active,
+    registration_end_time=None,
 ):
     # Verify faculty
     faculty = Faculty.query.filter_by(user_id=user_id).first()
@@ -43,6 +44,21 @@ def create_exam_schedule(
         raise ValueError(
             "end_time must be a valid ISO datetime."
         )
+
+    # Faculty-created testing exams should accept registrations through the
+    # scheduled exam window unless the faculty member supplies an earlier
+    # registration cutoff. Historically the cutoff defaulted to start_time,
+    # which closed registration as soon as an exam began.
+    if registration_end_time in (None, ''):
+        registration_end_time = end_time
+    else:
+        try:
+            registration_end_time = datetime.fromisoformat(registration_end_time)
+        except (TypeError, ValueError):
+            raise ValueError("registration_end_time must be a valid ISO datetime.")
+
+    if registration_end_time > end_time:
+        raise ValueError("Registration must close no later than the exam end time.")
 
     # Validate time range
     if end_time <= start_time:
@@ -92,6 +108,7 @@ def create_exam_schedule(
         exam_id=exam_id,
         start_time=start_time,
         end_time=end_time,
+        registration_end_time=registration_end_time,
         room=room,
         max_attempts=max_attempts,
         is_active=is_active
