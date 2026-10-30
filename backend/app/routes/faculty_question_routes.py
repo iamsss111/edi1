@@ -11,12 +11,48 @@ from app.models import Question
 
 from app.services.faculty_question_service import (
     create_question,
-    get_my_questions
+    get_my_questions,
+    import_questions_csv,
 )
 from app.utils.rbac import role_required
 
 
 faculty_question_bp = Blueprint('faculty_question', __name__)
+
+
+@faculty_question_bp.post('/questions/import-csv')
+@role_required('FACULTY')
+def import_questions_csv_endpoint():
+    if request.content_length and request.content_length > 5 * 1024 * 1024 + 64 * 1024:
+        return jsonify({'success': False, 'message': 'CSV uploads must be 5 MB or smaller.'}), 413
+    uploaded_file = request.files.get('file')
+    if uploaded_file is None or not uploaded_file.filename:
+        return jsonify({'success': False, 'message': 'Choose a CSV file to upload.'}), 400
+    if not uploaded_file.filename.lower().endswith('.csv'):
+        return jsonify({'success': False, 'message': 'Only .csv files are supported.'}), 400
+
+    csv_bytes = uploaded_file.stream.read(5 * 1024 * 1024 + 1)
+    if len(csv_bytes) > 5 * 1024 * 1024:
+        return jsonify({'success': False, 'message': 'CSV files must be 5 MB or smaller.'}), 413
+
+    try:
+        imported = import_questions_csv(
+            user_id=int(get_jwt_identity()),
+            subject_id=request.form.get('subject_id'),
+            csv_bytes=csv_bytes,
+        )
+        return jsonify({
+            'success': True,
+            'message': f'{len(imported)} questions imported into your question bank.',
+            'data': {
+                'imported_count': len(imported),
+                'question_ids': [question.question_id for question in imported],
+            },
+        }), 201
+    except (TypeError, ValueError) as error:
+        return jsonify({'success': False, 'message': str(error)}), 400
+    except Exception:
+        return jsonify({'success': False, 'message': 'CSV import failed. No questions were saved.'}), 500
 
 
 @faculty_question_bp.get('/questions/<int:question_id>')

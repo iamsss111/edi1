@@ -129,6 +129,12 @@
           <p class="text-muted small m-0">Add normalized questions and dynamic options (Question & QuestionOption schema)</p>
         </div>
 
+        <div class="btn-group mb-4" role="group" aria-label="Question entry method">
+          <button type="button" class="btn btn-primary-custom" id="manualQuestionModeButton">Create manually</button>
+          <button type="button" class="btn btn-outline-primary" id="csvQuestionModeButton"><i class="bi bi-filetype-csv me-1"></i>Upload CSV</button>
+        </div>
+
+        <section id="manualQuestionSection">
         <div class="glass-card p-4 p-md-5" style="max-width: 850px;">
           <form id="facultyQuestionForm">
             
@@ -138,6 +144,7 @@
                 <select id="questionSubjectId" class="form-select form-control-custom" required>
                   <option value="">Loading assigned subjects…</option>
                 </select>
+                <div id="questionSubjectLoadMessage" class="form-text text-danger d-none" role="status"></div>
               </div>
               
               <div class="col-md-6">
@@ -228,6 +235,41 @@
             </div>
           </form>
         </div>
+        </section>
+
+        <section id="csvQuestionSection" class="d-none" style="max-width: 850px;">
+          <div class="glass-card p-4 p-md-5">
+            <h4 class="h5 fw-bold mb-2"><i class="bi bi-filetype-csv text-success me-2"></i>Import a Question Bank</h4>
+            <p class="text-muted small">Upload a UTF-8 CSV. Every question is validated before saving; if any row is invalid, the upload is rejected and nothing is imported.</p>
+            <a class="btn btn-sm btn-outline-secondary mb-4" href="/static/templates/question_bank_template.csv" download>
+              <i class="bi bi-download me-1"></i>Download CSV template
+            </a>
+            <form id="questionCsvUploadForm">
+              <div class="mb-3">
+                <label for="csvQuestionSubjectId" class="form-label small fw-semibold">Subject</label>
+                <select id="csvQuestionSubjectId" name="subject_id" class="form-select form-control-custom" required>
+                  <option value="">Loading assigned subjects…</option>
+                </select>
+                <div id="csvQuestionSubjectLoadMessage" class="form-text text-danger d-none" role="status"></div>
+              </div>
+              <div class="mb-3">
+                <label for="questionCsvFile" class="form-label small fw-semibold">Question bank CSV</label>
+                <input id="questionCsvFile" name="file" type="file" class="form-control form-control-custom" accept=".csv,text/csv" required>
+                <div class="form-text">Maximum file size: 5 MB; maximum 500 questions per upload.</div>
+              </div>
+              <div class="alert alert-light border small">
+                <strong>Required columns:</strong> question_text, question_type, marks, difficulty.<br>
+                <strong>Optional columns:</strong> option_a through option_f, correct_answer, explanation.<br>
+                Use question types <code>MCQ</code>, <code>TrueFalse</code>, <code>ShortAnswer</code>, or <code>Descriptive</code> and difficulty <code>Easy</code>, <code>Medium</code>, or <code>Hard</code>. MCQ and TrueFalse rows need at least two options and one correct answer; correct_answer can be A–F or the exact option text. Leave options and correct_answer blank for written questions.
+              </div>
+              <div id="questionCsvUploadStatus" class="small mb-3" aria-live="polite"></div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success px-4" id="questionCsvUploadButton"><i class="bi bi-cloud-arrow-up me-1"></i>Upload questions</button>
+                <a href="/questions/list.html" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -236,6 +278,7 @@
   <script src="/static/js/api.js"></script>
   <script src="/static/js/app.js"></script>
   <script src="/static/js/portal_ui.js"></script>
+  <script src="/static/js/question_csv_ui.js"></script>
   <script>
     function toggleOptionSection() {
       const type = document.getElementById('qTypeSelect').value;

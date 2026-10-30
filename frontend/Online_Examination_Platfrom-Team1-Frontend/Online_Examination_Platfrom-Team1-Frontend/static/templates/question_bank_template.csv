@@ -1,0 +1,4 @@
+question_text,question_type,marks,difficulty,option_a,option_b,option_c,option_d,option_e,option_f,correct_answer,explanation
+Which SQL clause filters rows before grouping?,MCQ,2,Easy,WHERE,GROUP BY,ORDER BY,HAVING,,,A,WHERE filters rows before grouping
+The primary key uniquely identifies each row.,TrueFalse,1,Easy,True,False,,,,,A,
+Explain the purpose of a foreign key.,ShortAnswer,3,Medium,,,,,,,,A foreign key links a row to a key in another table

@@ -169,12 +169,36 @@ async function bindAdminFacultyAssignments() {
 }
 
 async function loadQuestionSubjects() {
-  const select = document.getElementById('questionSubjectId');
-  if (!select) return;
+  const selects = ['questionSubjectId', 'csvQuestionSubjectId']
+    .map(id => document.getElementById(id)).filter(Boolean);
+  if (!selects.length) return;
   try {
     const { data = [] } = await apiRequest('/subjects');
-    select.innerHTML = '<option value="">Select a subject</option>' + data.map(s => `<option value="${s.subject_id}">${portalEscape(s.subject_code)} — ${portalEscape(s.subject_name)}</option>`).join('');
-  } catch (error) { select.innerHTML = '<option value="">Could not load assigned subjects</option>'; showToast(error.message, 'danger'); }
+    for (const select of selects) {
+      select.innerHTML = data.length
+        ? '<option value="">Select a subject</option>' + data.map(s => `<option value="${s.subject_id}">${portalEscape(s.subject_code)} — ${portalEscape(s.subject_name)}</option>`).join('')
+        : '<option value="">No active subjects assigned to your faculty account</option>';
+      select.disabled = data.length === 0;
+    }
+  } catch (error) {
+    const message = error.status === 401
+      ? 'Your faculty session has expired. Sign in again to load assigned subjects.'
+      : error.status === 403
+        ? 'This page requires a faculty account. Sign in as faculty to load assigned subjects.'
+        : error.message || 'Could not load assigned subjects. Check that the backend is running.';
+    for (const select of selects) {
+      select.innerHTML = `<option value="">${portalEscape(message)}</option>`;
+      select.disabled = true;
+    }
+    for (const help of ['questionSubjectLoadMessage', 'csvQuestionSubjectLoadMessage']
+      .map(id => document.getElementById(id)).filter(Boolean)) {
+      help.innerHTML = error.status === 401 || error.status === 403
+        ? `${portalEscape(message)} <a href="/auth/login.html">Go to sign in</a>.`
+        : portalEscape(message);
+      help.classList.remove('d-none');
+    }
+    showToast(message, 'danger');
+  }
 }
 
 async function loadFacultyQuestions() {

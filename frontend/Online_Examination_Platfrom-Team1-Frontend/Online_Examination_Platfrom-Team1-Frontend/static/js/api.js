@@ -104,10 +104,11 @@ function isAuthenticated() {
 async function apiRequest(endpoint, options = {}) {
   const token = getAccessToken();
 
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {})
-  };
+  const headers = { ...(options.headers || {}) };
+  // Let the browser set the multipart boundary for file uploads.
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
