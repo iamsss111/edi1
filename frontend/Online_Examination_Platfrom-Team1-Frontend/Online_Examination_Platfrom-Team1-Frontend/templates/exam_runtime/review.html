@@ -134,6 +134,7 @@
         <a
           href="/exam_runtime/exam.html"
           class="btn btn-outline-secondary"
+          id="returnToExamLink"
         >
           &larr; Return to Question Palette
         </a>
@@ -169,7 +170,9 @@
       examId: null,
       questions: [],
       answers: {},
-      isSubmitted: false
+      isSubmitted: false,
+      adaptive: false,
+      adaptiveReviewQuestionIds: []
     };
 
 
@@ -197,40 +200,42 @@
         reviewState.examId =
           attempt.exam_id;
 
+        reviewState.adaptive = attempt.adaptive_enabled === true;
+        let answersResponse;
 
-        const [questionsResponse, answersResponse] =
-          await Promise.all([
-
-            apiRequest(
-              `/exams/${reviewState.examId}/questions`,
-              {
-                method: 'GET'
-              }
-            ),
-
-            apiRequest(
-              `/attempts/${reviewState.attemptId}/answers`,
-              {
-                method: 'GET'
-              }
-            )
-
+        if (reviewState.adaptive) {
+          const savedHistory = JSON.parse(
+            sessionStorage.getItem(`exam_runtime_adaptive_${reviewState.attemptId}`) || '{}'
+          );
+          reviewState.questions = Number(savedHistory.attempt_id) === Number(reviewState.attemptId)
+            && Array.isArray(savedHistory.questions)
+            ? savedHistory.questions
+            : [];
+          reviewState.adaptiveReviewQuestionIds = Array.isArray(savedHistory.review_question_ids)
+            ? savedHistory.review_question_ids
+            : [];
+          answersResponse = await apiRequest(
+            `/attempts/${reviewState.attemptId}/answers`,
+            { method: 'GET' }
+          );
+          document.getElementById('returnToExamLink').innerHTML =
+            '&larr; Return to Examination';
+        } else {
+          const [questionsResponse, normalAnswersResponse] = await Promise.all([
+            apiRequest(`/exams/${reviewState.examId}/questions`, { method: 'GET' }),
+            apiRequest(`/attempts/${reviewState.attemptId}/answers`, { method: 'GET' })
           ]);
 
-
-        if (
-          !questionsResponse ||
-          !questionsResponse.success ||
-          !questionsResponse.data ||
-          !Array.isArray(
-            questionsResponse.data.questions
-          )
-        ) {
-
-          throw new Error(
-            'Unable to retrieve examination questions.'
-          );
-
+          if (
+            !questionsResponse ||
+            !questionsResponse.success ||
+            !questionsResponse.data ||
+            !Array.isArray(questionsResponse.data.questions)
+          ) {
+            throw new Error('Unable to retrieve examination questions.');
+          }
+          reviewState.questions = questionsResponse.data.questions;
+          answersResponse = normalAnswersResponse;
         }
 
 
@@ -248,10 +253,6 @@
           );
 
         }
-
-
-        reviewState.questions =
-          questionsResponse.data.questions;
 
 
         answersResponse.data.answers.forEach(answer => {
@@ -335,8 +336,9 @@
       reviewState.questions.forEach(
         (question, index) => {
 
-          const questionNumber =
-            question.number || index + 1;
+          const questionNumber = reviewState.adaptive
+            ? index + 1
+            : question.number || index + 1;
 
 
           const answered =
@@ -356,7 +358,7 @@
             <td>Q${questionNumber}</td>
 
             <td>
-              ${getQuestionTypeLabel(question.type)}
+              ${getQuestionTypeLabel(question.type || question.question_type)}
             </td>
 
             <td>
@@ -368,7 +370,7 @@
             </td>
 
             <td>
-              <span class="text-muted">No</span>
+              <span class="text-muted">${reviewState.adaptive && reviewState.adaptiveReviewQuestionIds.includes(question.exam_question_id) ? 'Yes' : 'No'}</span>
             </td>
           `;
 
